@@ -1,0 +1,18 @@
+policies:
+  - name: find-idle-vms
+    description: Finds low utilization virtual machines based on CPU threshold
+    resource: azure.vm
+    mode:
+      type: azure-periodic
+      schedule: '0 0 * * * *'
+      provision-options:
+        servicePlanName: custodiansamplepipeline
+      execution-options:
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodian
+    filters:
+      - type: metric
+        metric: Percentage CPU
+        aggregation: average
+        op: lt
+        threshold: 5
+        timeframe: 24

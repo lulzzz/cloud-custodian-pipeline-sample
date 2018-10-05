@@ -1,0 +1,15 @@
+policies:
+  - name: delete-empty-resource-groups
+    description: Removes any empty resource groups from subscription
+    resource: azure.resourcegroup
+    mode:
+      type: azure-periodic
+      schedule: '0 0 * * * *'
+      provision-options:
+        servicePlanName: custodiansamplepipeline
+      execution-options:
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodian
+    filters:
+      - type: empty-group
+    actions:
+      - type: delete
