@@ -18,3 +18,7 @@ steps:
       PathToPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: policies
       publishLocation: Container
+  - script: python -m pip install --upgrade pip setuptools wheel
+    displayName: 'Install tools'
+  - script: pip install -r requirements.txt
+    displayName: 'Install requirements'
