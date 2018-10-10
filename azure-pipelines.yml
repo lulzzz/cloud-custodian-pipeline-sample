@@ -29,3 +29,10 @@ steps:
       scriptPath: "src/build/scripts/validate_policies.py"
       arguments: '-m modified.yml'
       failOnStderr: true
+  - task: PythonScript@0
+    displayName: 'Validate that policies are in function mode'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: "src/build/scripts/validate_policy_mode.py"
+      arguments: '-m modified.yml'
+      failOnStderr: true

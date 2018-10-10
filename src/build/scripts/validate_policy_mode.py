@@ -3,7 +3,6 @@ import yaml
 import json
 import sys
 
-
 class ValidatePolicies(object):
     def __init__(self, modified_path):
         self.modified_path = modified_path
