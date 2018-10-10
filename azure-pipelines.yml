@@ -18,17 +18,30 @@ steps:
       PathToPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: policies
       publishLocation: Container
+  - script: wget https://github.com/libgit2/libgit2/archive/v0.27.0.tar.gz &&
+            tar xzf v0.27.0.tar.gz &&
+            cd libgit2-0.27.0/ &&
+            cmake . &&
+            make &&
+            sudo make install &&
+            sudo ldconfig
+    displayName: 'Install libgit2'
   - script: python -m pip install --upgrade pip setuptools wheel
     displayName: 'Install tools'
   - script: pip install -r requirements.txt
     displayName: 'Install requirements'
+  - script: wget 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
+            chmod +x policystream.py
+    displayName: 'Get policystream script'
   - task: PythonScript@0
-    displayName: 'Validate policies'
+    displayName: 'Get modification to custodian policies'
     inputs:
       scriptSource: 'filePath'
-      scriptPath: "src/build/scripts/validate_policies.py"
-      arguments: '-m modified.yml'
-      failOnStderr: true
+      scriptPath: 'policystream.py'
+      arguments: 'diff -r . --source origin/master --target HEAD -o modified.yml'
+      faillOnStderr: true
+  - script: 'custodian validate modified.yml'
+    displayName: 'Validate policies'
   - task: PythonScript@0
     displayName: 'Validate that policies are in function mode'
     inputs:

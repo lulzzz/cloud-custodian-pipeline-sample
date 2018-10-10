@@ -23,6 +23,8 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+modified.yml
+policystream.py
 
 # custodian
 custodian/
