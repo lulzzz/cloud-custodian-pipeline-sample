@@ -20,7 +20,7 @@ policies:
     description: Find premium disks that are not attached to a VM
     resource: azure.disk
     mode:
-      type: azure-periodic
+      type: azureperiodic
       schedule: '0 0 * * * *'
       provision-options:
         servicePlanName: custodiansamplepipeline
