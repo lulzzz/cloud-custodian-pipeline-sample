@@ -39,7 +39,7 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'policystream.py'
       arguments: 'diff -r . --source origin/master --target HEAD -o modified.yml'
-      faillOnStderr: true
+      faillOnStderr: false
   - script: 'custodian validate modified.yml'
     displayName: 'Validate policies'
   - task: PythonScript@0
@@ -48,4 +48,4 @@ steps:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
       arguments: '-m modified.yml'
-      failOnStderr: true
+      failOnStderr: false
