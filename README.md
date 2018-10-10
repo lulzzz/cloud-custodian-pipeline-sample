@@ -2,9 +2,21 @@
 
 This is a sample implementation of an end to end [Cloud Custodian](https://github.com/capitalone/cloud-custodian) deployment on Azure
 
+## Prerequisites
+* Docker
+
 ## Setup
 
 You'll need to do some one-time setup to configure security, CI/CD, and the data processing pipeline. After this is done, you can iterate on policy development in a safe automated environment.
+
+
+### Provisioning
+
+A `Dockerfile` is provided for easy setup and configuration of Azure resources in a container, regardless if you are on Windows/Linux/Mac. All that is required is docker to build and run the docker container.
+```
+docker build -t cloud-custodian-pipeline:latest
+docker run -it cloud-custodian-pipeline:latest
+```
 
 ### Service Principals
 
