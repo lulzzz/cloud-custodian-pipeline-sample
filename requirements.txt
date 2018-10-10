@@ -1,3 +1,5 @@
 c7n
 c7n_azure
+pygit2
+click
 pyyaml
