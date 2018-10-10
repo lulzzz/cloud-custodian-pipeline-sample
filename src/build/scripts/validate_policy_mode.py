@@ -12,7 +12,7 @@ for policy_file in policy_files:
             for policy in policies:
                 if 'mode' not in policy.keys(
                 ) or 'type' not in policy['mode'].keys(
-                ) or policy['mode']['type' ] ! = 'azure-periodic':
+                ) or policy['mode']['type'] != 'azure-periodic':
                     valid = False
             print(valid)
         except yaml.YAMLError as  exc:
