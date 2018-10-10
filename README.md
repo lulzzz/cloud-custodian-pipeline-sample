@@ -17,6 +17,15 @@ You'll need two Service Principals.
 
 ## Configuration
 
+## Build Tasks
+
+### Cloud Custodian Policy Validation
+All modified Cloud Custodian policies are linted and validated using the "custodian validate" command. 
+
+Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
+
+Policy validation is executed in [validate_policies.py](src/build/scripts/validate_policies.py)
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
