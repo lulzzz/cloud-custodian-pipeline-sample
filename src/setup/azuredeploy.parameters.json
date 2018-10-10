@@ -4,6 +4,12 @@
   "parameters": {
     "custodianLogStorageAccountName": {
       "value": "custodianlogs"
+    },
+    "keyVaultName": {
+      "value": "myVault"
+    },
+    "pipelineServicePrincipalObjectId": {
+      "value": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     }
   }
 }
