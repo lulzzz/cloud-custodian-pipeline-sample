@@ -26,6 +26,13 @@ Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml]
 
 Policy validation is executed in [validate_policies.py](src/build/scripts/validate_policies.py)
 
+### Policy Mode Validation
+All Cloud Custodian policies should be in policy mode (type: azure-periodic). 
+
+Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
+
+Policy validation is executed in [validate_policy_mode.py](src/build/scripts/validate_policy_mode.py)
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
