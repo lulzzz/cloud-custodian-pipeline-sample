@@ -1,0 +1,36 @@
+policies:
+  - name: find-idle-vms
+    description: Finds low utilization virtual machines based on CPU threshold
+    resource: azure.vm
+    mode:
+      type: azure-periodic
+      schedule: '0 0 * * * *'
+      provision-options:
+        servicePlanName: custodiansamplepipeline
+      execution-options:
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodian
+    filters:
+      - type: metric
+        metric: Percentage CPU
+        aggregation: average
+        op: lt
+        threshold: 5
+        timeframe: 24
+  - name: find-unused-premium-disks
+    description: Find premium disks that are not attached to a VM
+    resource: azure.disk
+    mode:
+      type: azure-periodic
+      schedule: '0 0 * * * *'
+      provision-options:
+        servicePlanName: custodiansamplepipeline
+      execution-options:
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodian
+    filters:
+      - type: value
+        key: sku.tier
+        op: eq
+        value: Premium
+      - type: value
+        key: managedBy
+        value: null

@@ -23,9 +23,9 @@ steps:
   - script: pip install -r requirements.txt
     displayName: 'Install requirements'
   - task: PythonScript@0
-    displayName: 'Validate policies'
+    displayName: 'Validate that policies are in function mode'
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
-      arguments: '-d changed-files.json'
+      arguments: '-m modified.yml'
       failOnStderr: true
