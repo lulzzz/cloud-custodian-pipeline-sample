@@ -3,7 +3,7 @@ import yaml
 import json
 import sys
 
-class ValidatePolicies(object):
+class ValidatePolicyMode(object):
     def __init__(self, modified_path):
         self.modified_path = modified_path
 
@@ -32,5 +32,5 @@ if __name__ in "__main__":
         if opt in ("-m"):
             modified_path = arg
 
-        runner = ValidatePolicies(modified_path)
+        runner = ValidatePolicyMode(modified_path)
         runner.run()
