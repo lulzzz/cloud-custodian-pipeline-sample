@@ -3,13 +3,14 @@ import yaml
 import json
 import sys
 
+
 class ValidatePolicies(object):
     def __init__(self, modified_path):
         self.modified_path = modified_path
-    
+
     def run(self):
         self._run_validate_policies(self.modified_path)
-    
+
     @staticmethod
     def _run_validate_policies(modified_path):
         with open(modified_path) as stream:
@@ -18,7 +19,8 @@ class ValidatePolicies(object):
                 if 'mode' not in policy.keys(
                 ) or 'type' not in policy['mode'].keys(
                 ) or policy['mode']['type'] != 'azure-periodic':
-                    raise Exception('Policy '+ policy['name'] + ' is not in the function mode.')
+                    raise Exception('Policy ' + policy['name'] + ' is not in the function mode.')
+
 
 if __name__ in "__main__":
     modified_path = ''
@@ -30,6 +32,6 @@ if __name__ in "__main__":
     for opt, arg in opts:
         if opt in ("-m"):
             modified_path = arg
-        
+
         runner = ValidatePolicies(modified_path)
-        runner.run()           
+        runner.run()
