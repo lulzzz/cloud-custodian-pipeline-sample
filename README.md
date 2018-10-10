@@ -4,9 +4,27 @@ This is a sample implementation of an end to end [Cloud Custodian](https://githu
 
 ## Setup
 
+You'll need to do some one-time setup to configure security, CI/CD, and the data processing pipeline. After this is done, you can iterate on policy development in a safe automated environment.
+
+### Service Principals
+
+You'll need two Service Principals.
+
+* The first is used at runtime by Cloud Custodian to access to the Azure API's. This SP needs access to execute policies across your targeted Subscriptions.
+* The second is used at release time by the Azure DevOps pipeline. This SP needs access to pull secrets from a KeyVault.
+
 ## Policies
 
 ## Configuration
+
+## Build Tasks
+
+### Cloud Custodian Policy Validation
+All modified Cloud Custodian policies are linted and validated using the "custodian validate" command. 
+
+Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
+
+Policy validation is executed in [validate_policies.py](src/build/scripts/validate_policies.py)
 
 # Contributing
 

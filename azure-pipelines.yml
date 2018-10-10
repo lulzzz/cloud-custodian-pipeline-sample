@@ -22,3 +22,10 @@ steps:
     displayName: 'Install tools'
   - script: pip install -r requirements.txt
     displayName: 'Install requirements'
+  - task: PythonScript@0
+    displayName: 'Validate policies'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: "src/build/scripts/validate_policies.py"
+      arguments: '-m modified.yml'
+      failOnStderr: true
