@@ -1,7 +1,6 @@
 import getopt
 import yaml
 import json
-import os
 import sys
 
 class ValidatePolicies(object):
@@ -14,18 +13,18 @@ class ValidatePolicies(object):
     @staticmethod
     def _run_validate_policies(modified_path):
         with open(modified_path) as stream:
-        valid = True
-        try:
-            policies = yaml.load(stream)['policies']
-            for policy in policies:
-                if 'mode' not in policy.keys(
-                ) or 'type' not in policy['mode'].keys(
-                ) or policy['mode']['type'] != 'azure-periodic':
-                    valid = False
-            print(valid)
-        except yaml.YAMLError as  exc:
-            valid = False
-            print(exc)
+            valid = True
+            try:
+                policies = yaml.load(stream)['policies']
+                for policy in policies:
+                    if 'mode' not in policy.keys(
+                    ) or 'type' not in policy['mode'].keys(
+                    ) or policy['mode']['type'] != 'azure-periodic':
+                        valid = False
+                print(valid)
+            except yaml.YAMLError as  exc:
+                valid = False
+                print(exc)
 
 if __name__ in "__main__":
     modified_path = ''
