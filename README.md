@@ -40,6 +40,9 @@ All target subscriptions should be listed in [config.json](policies/config.json)
 
 ## Build Tasks
 
+### azure-pipelines.yml
+[azure-pipelines.yml](azure-pipelines.yml) is used by Azure DevOps to create the build pipeline. You will need to edit this file and replace all variable values with values specific to your Azure subscription and environment.
+
 ### Installing Cloud Custodian
 Typically Cloud Custodian for Azure is installed by installing the c7n and c7n_azure pypi packages. Instead of installing the packages, the build task is installing from a branch with workarounds to make unique storage accounts. There are several required changes that need to be in the pypi packages for this pipeline to work as intended. When those changes are in the latests pypi packages it is recommended to install those packages and not a specific Github branch. 
 
