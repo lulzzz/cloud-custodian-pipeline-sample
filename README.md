@@ -31,12 +31,23 @@ You'll need two Service Principals.
 
 ## Build Tasks
 
+### Installing Cloud Custodian's PolicyStream Tool
+The Cloud Custodian policystream.py tool is fetched from Cloud Custodian's [tools/ops/policystream.py](https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py)
+
+The prerequisities for using the tool requires pygit2. The package of pygit2 requires libgit2, installing these on ubuntu requires the steps in
+this [document.](https://www.pygit2.org/install.html#quick-install)
+
+Installing the policystream.py file and its prerequisites are triggered as Pipeline Build tasks in [azure-pipelines.yml](azure-pipelines.yml)
+
+### Get Modifications to Custodian Policies
+All modified Cloud Custodian policies are discovered by running the policystream.py script installed from Cloud Custodian. The command checks the difference between the master branch of a repository and the source branch. The tool outputs to a modified.yml file that contains all the new or modified policies in one yml file. 
+
+Getting Custodian policy modifications is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
+
 ### Cloud Custodian Policy Validation
 All modified Cloud Custodian policies are linted and validated using the "custodian validate" command. 
 
 Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
-
-Policy validation is executed in [validate_policies.py](src/build/scripts/validate_policies.py)
 
 ### Policy Mode Validation
 All Cloud Custodian policies should be in policy mode (type: azure-periodic). 
