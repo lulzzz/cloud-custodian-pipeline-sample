@@ -10,7 +10,7 @@ class PolicyRunner(object):
             self.config = json.load(f)
         with open(policies_file) as f:
             self.policies_config = json.load(f)
-        self.sp_secret = json.load(sp_secret)
+        self.sp_secret = json.loads(sp_secret)
         self.output_dir = output_dir
 
     def run(self, dry_run=False):
