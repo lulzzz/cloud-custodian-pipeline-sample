@@ -28,6 +28,7 @@ You'll need two Service Principals.
 ## Policies
 
 ## Configuration
+All target subscriptions should be listed in [config.json](config.json)
 
 ## Build Tasks
 
