@@ -7,7 +7,11 @@ variables:
   serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
   keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
   secretsFilter: nameOfSecretsToRetrieve # replace with name of secret or * for all secrets
-  modifiedPoliciesFilePath: modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
+  servicePrincipalSecretName: spSecretName # replace with the name of the secret containing the service principal credentials in KeyVault
+  modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
+  configFilePath: policies/config.json # replace with path to policy config file if not default
+  policyFilePath: policies/policies.json # replace with path to policy file if not default
+  outputPath: / # replace with path for Custodian policy run output
 
 # Build tasks
 steps:
@@ -36,14 +40,14 @@ steps:
     displayName: 'Install Cloud Custodian'
   - script: pip install -r requirements.txt
     displayName: 'Install pip dependencies'
-  - script: wget 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
-            chmod +x policystream.py
+  - script: wget -O policies/policystream.py 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
+            chmod +x policies/policystream.py
     displayName: 'Get policystream script'
   - task: PythonScript@0
     displayName: 'Get all custodian policies that have been modified'
     inputs:
       scriptSource: 'filePath'
-      scriptPath: 'policystream.py'
+      scriptPath: 'policies/policystream.py'
       arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
       faillOnStderr: false
   - script: 'custodian validate $(modifiedPoliciesFilePath)'
@@ -54,7 +58,14 @@ steps:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
       arguments: '-m $(modifiedPoliciesFilePath)'
-      failOnStderr: true
+      failOnStderr: false
+  - task: PythonScript@0
+    displayName: 'Dry run Custodian policies to get all resources that will be affected by the policy'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: "src/build/scripts/policy_runner.py"
+      arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(servicePrincipalSecretName) -o $(outputPath) --dryrun'
+      failOnStderr: false
   - task: CopyFiles@2
     inputs:
       contents: 'policies\**\*'
