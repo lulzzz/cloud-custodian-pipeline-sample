@@ -1,23 +1,25 @@
 trigger: [ master ]
 pool:
   vmImage: 'Ubuntu 16.04'
+
+# Variables to use in build tasks
+variables:
+  serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
+  keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
+  secretsFilter: nameOfSecretsToRetrieve # replace with name of secret or * for all secrets
+  modifiedPoliciesFilePath: modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
+
+# Build tasks
 steps:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6'
-  - task: Bash@3
+  - task: AzureKeyVault@1
+    displayName: 'Download Azure Key Vault Secrets'
     inputs:
-      targetType: inline
-      script: echo 'Hello, world!'
-  - task: CopyFiles@2
-    inputs:
-      contents: 'policies\**\*'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathToPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: policies
-      publishLocation: Container
+      azureSubscription: $(serviceConnectionAzureSubscription)
+      keyVaultName: $(keyVaultName)
+      secretsFilter: $(secretsFilter)
   - script: wget https://github.com/libgit2/libgit2/archive/v0.27.0.tar.gz &&
             tar xzf v0.27.0.tar.gz &&
             cd libgit2-0.27.0/ &&
@@ -27,25 +29,34 @@ steps:
             sudo ldconfig
     displayName: 'Install libgit2'
   - script: python -m pip install --upgrade pip setuptools wheel
-    displayName: 'Install tools'
+    displayName: 'Install Python tools'
   - script: pip install -r requirements.txt
-    displayName: 'Install requirements'
+    displayName: 'Install pip dependencies'
   - script: wget 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
             chmod +x policystream.py
     displayName: 'Get policystream script'
   - task: PythonScript@0
-    displayName: 'Get modification to custodian policies'
+    displayName: 'Get all custodian policies that have been modified'
     inputs:
       scriptSource: 'filePath'
       scriptPath: 'policystream.py'
-      arguments: 'diff -r . --source origin/master --target HEAD -o modified.yml'
+      arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
       faillOnStderr: false
-  - script: 'custodian validate modified.yml'
-    displayName: 'Validate policies'
+  - script: 'custodian validate $(modifiedPoliciesFilePath)'
+    displayName: 'Validate all modified policies'
   - task: PythonScript@0
-    displayName: 'Validate that policies are in function mode'
+    displayName: 'Validate that modified policies are in function mode'
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
-      arguments: '-m modified.yml'
+      arguments: '-m $(modifiedPoliciesFilePath)'
       failOnStderr: false
+  - task: CopyFiles@2
+    inputs:
+      contents: 'policies\**\*'
+      targetFolder: '$(Build.ArtifactStagingDirectory)'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathToPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: policies
+      publishLocation: Container
