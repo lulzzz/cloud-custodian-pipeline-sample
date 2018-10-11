@@ -29,7 +29,11 @@ steps:
             sudo ldconfig
     displayName: 'Install libgit2'
   - script: python -m pip install --upgrade pip setuptools wheel
-    displayName: 'Install Python tools'
+    displayName: 'Install tools'
+  - script: git clone https://github.com/erwelch/cloud-custodian --branch erwelch-tmp-storage &&
+            pip install ./cloud-custodian &&
+            pip install ./cloud-custodian/tools/c7n_azure
+    displayName: 'Install Cloud Custodian'
   - script: pip install -r requirements.txt
     displayName: 'Install pip dependencies'
   - script: wget 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
@@ -50,7 +54,7 @@ steps:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
       arguments: '-m $(modifiedPoliciesFilePath)'
-      failOnStderr: false
+      failOnStderr: true
   - task: CopyFiles@2
     inputs:
       contents: 'policies\**\*'
