@@ -1,6 +1,0 @@
-{
-  "files": [
-    "policies/delete-empty-resource-groups.yml",
-    "policies/find-idle-vms.yml"
-  ]
-}

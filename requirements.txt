@@ -1,4 +1,4 @@
-pygit2
+pygit2==0.24.2
 click
 pyyaml
 requests
