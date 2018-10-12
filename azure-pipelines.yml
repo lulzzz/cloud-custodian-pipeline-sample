@@ -69,6 +69,11 @@ steps:
     inputs:
       contents: 'policies\**\*'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
+  - task: CopyFiles@2
+    inputs:
+      contents: 'src/build/scripts/policy_runner.py'
+      targetFolder: '$(Build.ArtifactStagingDirectory)'
+      flattenFolders: true
   - task: PublishBuildArtifacts@1
     inputs:
       PathToPublish: '$(Build.ArtifactStagingDirectory)'
