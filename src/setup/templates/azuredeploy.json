@@ -52,7 +52,7 @@
     {
       "name": "[parameters('keyVaultName')]",
       "type": "Microsoft.KeyVault/vaults",
-      "apiVersion": "2018-02-01",
+      "apiVersion": "2018-02-14",
       "location": "[resourceGroup().location]",
       "properties": {
         "tenantId": "[variables('tenantId')]",
@@ -61,12 +61,12 @@
             "tenantId": "[variables('tenantId')]",
             "objectId": "[parameters('pipelineServicePrincipalObjectId')]",
             "permissions": {
-              "secrets": ["list"]
+              "secrets": ["get","list"]
             }
           }
         ],
         "sku": {
-          "name": "Standard",
+          "name": "standard",
           "family": "A"
         }
       }
