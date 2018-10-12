@@ -1,0 +1,6 @@
+{
+  "files": [
+    "delete-empty-resource-groups.yml",
+    "find-idle-vms.yml"
+  ]
+}

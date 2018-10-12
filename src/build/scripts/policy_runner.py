@@ -49,7 +49,7 @@ if __name__ in "__main__":
     for opt, arg in opts:
         if opt == '-h':
             print('policy_runner.py -c <configFile> -p <policiesFile> -t <spTenantId> -a <spAppId> -s <spSecret> -o <outputFolder')
-            print('Example: policy_runner.py -c policies/config.json -p policies/policies.json -t spTenantId -a spAppId -s spSecret -o output --dryrun')
+            print('Example: policy_runner.py -c policies/config.json -p policies/policies.build.json -t spTenantId -a spAppId -s spSecret -o output --dryrun')
             sys.exit()
         elif opt in ("-c"):
             config_file = arg
