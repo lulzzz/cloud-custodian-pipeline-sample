@@ -2,3 +2,5 @@ pygit2==0.24.2
 click
 pyyaml
 requests
+vsts
+msrest==0.5.5

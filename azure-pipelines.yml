@@ -82,7 +82,16 @@ steps:
       arguments: '-c $(configFilePath) -p $(policyFilePath) -t $(CloudCustodianSPTenantId) -a $(CloudCustodianSPAppId) -s $(CloudCustodianSPClientSecret) -o $(outputPath) --dryrun'
       failOnStderr: false
 
-  # Copy Cloud Custodian dryrun output files
+  # Post the output of the dry run to the PR
+  - task: PythonScript@0
+    displayName: 'Post output to PR'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: 'src/build/scripts/post_to_pr.py'
+      arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(System.PullRequest.PullRequestId)" -i "$(System.PullRequest.PullRequestNumber)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
+      faillOnStderr: false
+
+# Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
     displayName: 'Copy Cloud Custodian dryrun output files'
     inputs:
