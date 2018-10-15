@@ -42,7 +42,10 @@ steps:
     displayName: 'Install pip dependencies'
 
   # Install Cloud Custodian and c7n_azure
-  - script: git clone https://github.com/erwelch/cloud-custodian --branch erwelch-tmp-storage &&
+  - script: git clone https://github.com/capitalone/cloud-custodian -n && 
+      cd cloud-custodian &&
+      git checkout 9f521de6a7cc30394fd4627a4c63e41a23424b9a &&
+      cd .. &&
       pip install ./cloud-custodian &&
       pip install ./cloud-custodian/tools/c7n_azure
     displayName: 'Install Cloud Custodian'
