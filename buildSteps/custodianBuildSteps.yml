@@ -1,0 +1,81 @@
+ parameters:
+  serviceConnectionAzureSubscription: ''
+  keyVaultName: ''
+  secretsFilter: '*' # replace with name of secret or * for all secrets
+  modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
+  configFilePath: policies/config.json # replace with path to policy config file if not default
+  policyFilePath: policies/policies.build.json # replace with path to policy file if not default
+  outputPath: output # replace with path for Custodian policy run output
+  cloudCustodianCommit: ''
+
+ steps:
+
+ # Set Python Version
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+
+  # Fetch Key Vault Secrets
+  - task: AzureKeyVault@1
+    displayName: 'Download Azure Key Vault Secrets'
+    inputs:
+      azureSubscription: $(serviceConnectionAzureSubscription)
+      keyVaultName: $(keyVaultName)
+      secretsFilter: $(secretsFilter)
+
+  # Update python tools
+  - script: python -m pip install --upgrade pip setuptools wheel
+    displayName: 'Update python pip tools'
+
+  # Install libgit2 for policystream.py
+  - script: sudo apt-get update && sudo apt-get -y install libgit2-dev
+    displayName: 'Install libgit2'
+
+  # Install dependencies for policy stream
+  - script: pip install -r requirements.txt
+    displayName: 'Install pip dependencies'
+
+  # Install Cloud Custodian and c7n_azure
+  - script: git clone https://github.com/capitalone/cloud-custodian -n &&
+      cd cloud-custodian &&
+      git checkout $(cloudCustodianCommit) &&
+      cd .. &&
+      pip install ./cloud-custodian &&
+      pip install ./cloud-custodian/tools/c7n_azure
+    displayName: 'Install Cloud Custodian'
+
+  # Get policystream.py
+  - script: wget -O policies/policystream.py 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
+            chmod +x policies/policystream.py
+    displayName: 'Get policystream script'
+
+  # Run policystream.py to get modified policies
+  - task: PythonScript@0
+    displayName: 'Get all custodian policies that have been modified'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: 'policies/policystream.py'
+      arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
+      faillOnStderr: false
+
+  # Run Custodian validate
+  - script: 'custodian validate $(modifiedPoliciesFilePath)'
+    displayName: 'Validate all modified policies'
+
+  # Check if all policies are Function modes
+  - task: PythonScript@0
+    displayName: 'Validate that modified policies are in function mode'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: "src/build/scripts/validate_policy_mode.py"
+      arguments: '-m $(modifiedPoliciesFilePath)'
+      failOnStderr: false
+
+  # Run all modified Custodian policies in Dryrun mode
+  - task: PythonScript@0
+    displayName: 'Dry run Custodian policies to get all resources that will be affected by the policy'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: "src/build/scripts/policy_runner.py"
+      arguments: '-c $(configFilePath) -p $(policyFilePath) -t $(CloudCustodianSPTenantId) -a $(CloudCustodianSPAppId) -s $(CloudCustodianSPClientSecret) -o $(outputPath) --dryrun'
+      failOnStderr: false

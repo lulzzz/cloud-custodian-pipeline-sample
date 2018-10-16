@@ -1,0 +1,37 @@
+name: Cloud Custodian - PR
+trigger: none
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+# Variables to use in build tasks
+variables:
+  serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
+  keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
+  secretsFilter: '*' # replace with name of secret or * for all secrets
+  modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
+  configFilePath: policies/config.json # replace with path to policy config file if not default
+  policyFilePath: policies/policies.build.json # replace with path to policy file if not default
+  outputPath: output # replace with path for Custodian policy run output
+  repositoryId: idOfTheRepository # replace with the id of the repository, see Project Settings -> Repositories -> Select repo and look at URL
+
+# Build tasks
+steps:
+  - template: buildSteps/custodianBuildSteps.yml
+    parameters:
+      serviceConnectionAzureSubscription: $(serviceConnectionAzureSubscription)
+      keyVaultName: $(keyVaultName)
+      secretsFilter: $(secretsFilter)
+      modifiedPoliciesFilePath: $(modifiedPoliciesFilePath)
+      configFilePath: $(configFilePath)
+      policyFilePath: $(policyFilePath)
+      outputPath: $(outputPath)
+      cloudCustodianCommit: $(cloudCustodianCommit)
+
+  # Post the output of the dry run to the PR
+  - task: PythonScript@0
+    displayName: 'Post output to PR'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: 'src/build/scripts/post_to_pr.py'
+      arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
+      faillOnStderr: false
