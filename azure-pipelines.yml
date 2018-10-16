@@ -1,4 +1,8 @@
-trigger: [ master ]
+name: Cloud Custodian - CI
+trigger:
+  branches:
+    include:
+    - master
 pool:
   vmImage: 'Ubuntu 16.04'
 
@@ -16,85 +20,16 @@ variables:
 
 # Build tasks
 steps:
-
-  # Set Python Version
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.6'
-
-  # Fetch Key Vault Secrets
-  - task: AzureKeyVault@1
-    displayName: 'Download Azure Key Vault Secrets'
-    inputs:
-      azureSubscription: $(serviceConnectionAzureSubscription)
+  - template: buildSteps/custodianBuildSteps.yml
+    parameters:
+      serviceConnectionAzureSubscription: $(serviceConnectionAzureSubscription)
       keyVaultName: $(keyVaultName)
       secretsFilter: $(secretsFilter)
-
-  # Update python tools
-  - script: python -m pip install --upgrade pip setuptools wheel
-    displayName: 'Update python pip tools'
-
-  # Install libgit2 for policystream.py
-  - script: sudo apt-get update && sudo apt-get -y install libgit2-dev
-    displayName: 'Install libgit2'
-
-  # Install dependencies for policy stream
-  - script: pip install -r requirements.txt
-    displayName: 'Install pip dependencies'
-
-  # Install Cloud Custodian and c7n_azure
-  - script: git clone https://github.com/capitalone/cloud-custodian -n && 
-      cd cloud-custodian &&
-      git checkout $(cloudCustodianCommit) &&
-      cd .. &&
-      pip install ./cloud-custodian &&
-      pip install ./cloud-custodian/tools/c7n_azure
-    displayName: 'Install Cloud Custodian'
-
-  # Get policystream.py
-  - script: wget -O policies/policystream.py 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
-            chmod +x policies/policystream.py
-    displayName: 'Get policystream script'
-
-  # Run policystream.py to get modified policies
-  - task: PythonScript@0
-    displayName: 'Get all custodian policies that have been modified'
-    inputs:
-      scriptSource: 'filePath'
-      scriptPath: 'policies/policystream.py'
-      arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
-      faillOnStderr: false
-
-  # Run Custodian validate
-  - script: 'custodian validate $(modifiedPoliciesFilePath)'
-    displayName: 'Validate all modified policies'
-
-  # Check if all policies are Function modes
-  - task: PythonScript@0
-    displayName: 'Validate that modified policies are in function mode'
-    inputs:
-      scriptSource: 'filePath'
-      scriptPath: "src/build/scripts/validate_policy_mode.py"
-      arguments: '-m $(modifiedPoliciesFilePath)'
-      failOnStderr: false
-
-  # Run all modified Custodian policies in Dryrun mode
-  - task: PythonScript@0
-    displayName: 'Dry run Custodian policies to get all resources that will be affected by the policy'
-    inputs:
-      scriptSource: 'filePath'
-      scriptPath: "src/build/scripts/policy_runner.py"
-      arguments: '-c $(configFilePath) -p $(policyFilePath) -t $(CloudCustodianSPTenantId) -a $(CloudCustodianSPAppId) -s $(CloudCustodianSPClientSecret) -o $(outputPath) --dryrun'
-      failOnStderr: false
-
-  # Post the output of the dry run to the PR
-  - task: PythonScript@0
-    displayName: 'Post output to PR'
-    inputs:
-      scriptSource: 'filePath'
-      scriptPath: 'src/build/scripts/post_to_pr.py'
-      arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
-      faillOnStderr: false
+      modifiedPoliciesFilePath: $(modifiedPoliciesFilePath)
+      configFilePath: $(configFilePath)
+      policyFilePath: $(policyFilePath)
+      outputPath: $(outputPath)
+      cloudCustodianCommit: $(cloudCustodianCommit)
 
 # Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
