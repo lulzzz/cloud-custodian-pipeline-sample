@@ -23,11 +23,8 @@ docker run -it cloud-custodian-pipeline:latest
 You'll need two Service Principals.
 
 * The first is used at runtime by Cloud Custodian to access to the Azure API's. This SP needs access to execute policies across your targeted Subscriptions.
-Credentials of this service principal should be added to KeyVault in the following secrets:
-
-CloudCustodianSPTenantId
-CloudCustodianSPAppId
-CloudCustodianSPClientSecret
+Service principal credentials should be formed in a json in the following format and Base64 encoded. Encoded string should be added to KeyVault in a secret with the name CustodianServicePrincipalReadonly.
+{"tenantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",   "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",   "clientSecret": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
 
 * The second is used at release time by the Azure DevOps pipeline. This SP needs access to pull secrets from a KeyVault.
 
