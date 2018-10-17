@@ -1,3 +1,4 @@
+name: Cloud Custodian - CI
 trigger: [ master ]
 pool:
   vmImage: 'Ubuntu 16.04'
@@ -6,7 +7,7 @@ pool:
 variables:
   serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
   keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
-  secretsFilter: '*' # replace with name of secret or * for all secrets
+  secretsFilter: 'CustodianBuildServicePrincipal' # replace with name of secret or * for all secrets
   modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
   configFilePath: policies/config.json # replace with path to policy config file if not default
   policyFilePath: policies/policies.build.json # replace with path to policy file if not default
@@ -16,7 +17,6 @@ variables:
 
 # Build tasks
 steps:
-
   # Set Python Version
   - task: UsePythonVersion@0
     inputs:
@@ -43,7 +43,7 @@ steps:
     displayName: 'Install pip dependencies'
 
   # Install Cloud Custodian and c7n_azure
-  - script: git clone https://github.com/capitalone/cloud-custodian -n && 
+  - script: git clone https://github.com/capitalone/cloud-custodian -n &&
       cd cloud-custodian &&
       git checkout $(cloudCustodianCommit) &&
       cd .. &&
@@ -84,9 +84,9 @@ steps:
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/policy_runner.py"
-      arguments: '-c $(configFilePath) -p $(policyFilePath) -t $(CloudCustodianSPTenantId) -a $(CloudCustodianSPAppId) -s $(CloudCustodianSPClientSecret) -o $(outputPath) --dryrun'
+      arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianBuildServicePrincipal) -o $(outputPath) --dryrun'
       failOnStderr: false
-
+  
   # Post the output of the dry run to the PR
   - task: PythonScript@0
     displayName: 'Post output to PR'
@@ -96,7 +96,7 @@ steps:
       arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
       faillOnStderr: false
 
-# Copy Cloud Custodian dryrun output files
+  # Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
     displayName: 'Copy Cloud Custodian dryrun output files'
     inputs:
