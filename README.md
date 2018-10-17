@@ -2,28 +2,16 @@
 
 This is a sample implementation of an end to end [Cloud Custodian](https://github.com/capitalone/cloud-custodian) deployment on Azure
 
-## Prerequisites
-* Docker
-
 ## Setup
 
 You'll need to do some one-time setup to configure security, CI/CD, and the data processing pipeline. After this is done, you can iterate on policy development in a safe automated environment.
-
-
-### Provisioning
-
-A `Dockerfile` is provided for easy setup and configuration of Azure resources in a container, regardless if you are on Windows/Linux/Mac. All that is required is docker to build and run the docker container.
-```
-docker build -t cloud-custodian-pipeline:latest
-docker run -it cloud-custodian-pipeline:latest
-```
 
 ### Service Principals
 
 You'll need two Service Principals.
 
 * The first is used at runtime by Cloud Custodian to access to the Azure API's. This SP needs access to execute policies across your targeted Subscriptions.
-Service principal credentials should be formed in a json in the following format and Base64 encoded. Encoded string should be added to KeyVault in a secret with the name CustodianServicePrincipalReadonly.
+Service principal credentials should be formed in a json in the following format and Base64 encoded. Encoded string should be added to KeyVault in a secret with the name CustodianBuildServicePrincipal.
 {"tenantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",   "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",   "clientSecret": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
 
 * The second is used at release time by the Azure DevOps pipeline. This SP needs access to pull secrets from a KeyVault.

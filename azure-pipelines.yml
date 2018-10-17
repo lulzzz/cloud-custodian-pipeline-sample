@@ -7,7 +7,7 @@ pool:
 variables:
   serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
   keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
-  secretsFilter: '*' # replace with name of secret or * for all secrets
+  secretsFilter: 'CustodianBuildServicePrincipal' # replace with name of secret or * for all secrets
   modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
   configFilePath: policies/config.json # replace with path to policy config file if not default
   policyFilePath: policies/policies.build.json # replace with path to policy file if not default
@@ -84,7 +84,7 @@ steps:
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/policy_runner.py"
-      arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianServicePrincipalReadonly) -o $(outputPath) --dryrun'
+      arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianBuildServicePrincipal) -o $(outputPath) --dryrun'
       failOnStderr: false
   
   # Post the output of the dry run to the PR
