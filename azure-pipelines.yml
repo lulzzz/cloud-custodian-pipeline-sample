@@ -7,7 +7,7 @@ pool:
 variables:
   serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
   keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
-  secretsFilter: 'CustodianBuildServicePrincipal' # replace with name of secret or * for all secrets
+  secretsFilter: 'CustodianBuildServicePrincipal,AzureDevOpsApiToken' # replace with name of secret or * for all secrets
   modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
   configFilePath: policies/config.json # replace with path to policy config file if not default
   policyFilePath: policies/policies.build.json # replace with path to policy file if not default
