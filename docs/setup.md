@@ -1,0 +1,95 @@
+# Setup Guide
+
+## Azure DevOps
+
+The CI/CD portion of the pipeline runs on [Azure DevOps](https://docs.microsoft.com/en-us/azure/devops/user-guide/?view=vsts). Follow these steps to configure the pipeline in a new Azure DevOps project:
+
+![New Azure DevOps project](../docs/images/new-devops-project.png)
+
+### Import Repository
+
+Navigate to the repository and import the sample from GitHub
+
+![Navigate to Azure Repos](../docs/images/navigate-to-repo.png)
+
+![Specify the GitHub repo url](../docs/images/import-cloud-custodian-pipeline-repository.png)
+
+### Create a Build
+
+Next, you'll create a [YAML-based build](https://docs.microsoft.com/en-us/azure/devops/pipelines/get-started-yaml?view=vsts) using Azure Pipelines. Choose the `Hosted Ubuntu 1604` agent pool and the `azure-pipelines.yml` build definition.
+
+![Navigate to Azure Pipelines](../docs/images/navigate-to-builds.png)
+
+![Create a new Build](../docs/images/new-pipeline-source.png)
+
+![Create a new Build](../docs/images/new-pipeline-yaml.png)
+
+![Select the YAML build definition](../docs/images/build-choose-yaml.png)
+
+Next, you'll need to configure Azure DevOps so that it can connect to your Azure Subscription. Go to [Project Settings] -> [Pipelines] -> [Service connections] and add a new service connection for Azure Resource Manager.
+
+### Create a Release
+
+### Create a Service Connection
+
+![Create a service connection](../docs/images/new-service-connection.png)
+
+You'll need the Azure Active Directory objectId for the Service Principal that was created so that you can grant it access to the secrets that are stored inside Key Vault. Follow these steps to get the objectId. You'll use this when you run `setup.sh` to create the environment for your Cloud Custodian policies
+
+![Manage Service Principal](../docs/images/manage-service-principal.png)
+
+![Get Service Principal objectId](../docs/images/get-object-id.png)
+
+### Create a Personal Access Token
+
+After checking the impact of changed policies, the build will post feedback to the Pull Request. To do this, it needs an Azure DevOps API token. Follow [these steps](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=vsts) to create a Personal Access Token.
+
+![Create a new personal access token](../docs/images/new-personal-access-token.png)
+
+This token will need the `Code: Read & write` permission.  Keep this PAT for later use with `setup.sh`
+
+## Azure resources
+
+The pipeline needs a few Azure resources to execute and aggregate policy results. These are lined out in further detail in [`setup.md`](/../docs/setup.md) folder, and are described in code at [/src/setup](/src/setup). To get started quickly you can use the provided `setup.sh` helper script inside Azure Cloud Shell.
+
+This script will create
+
+* Service Principal for PR Builds
+* Service Principal for Cloud Custodian policy execution
+* Key Vault to store secrets
+* Storage account for Custodian logs
+
+There are a few lines of output that you'll use in later steps when configuring your pipeline. They'll be written to STDOUT and saved to `setup.log`
+
+```shell
+# Clone the sample pipeline
+git clone https://github.com/Microsoft/cloud-custodian-pipeline-sample.git
+cd cloud-custodian-pipeline-sample/src/setup
+
+# Run one-time setup in your Azure Subscription
+# Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP PAT LOCATION
+# Example usage, substitute with your own values
+./setup.sh cloud-custodian-rg 00000000-0000-0000-0000-000000000000 vwferscof5rcoxfmxltowonqmrntspv5jqtvqwwjsndf7qwi2xxa westus2
+```
+
+## [Custodian Mailer](https://github.com/capitalone/cloud-custodian/blob/master/tools/c7n_mailer/README.md#using-on-azure)
+
+Cloud Custodian does not directly send notifications to resource owners. Instead, it adds messages to an Azure Storage Queue and a Mailer component sends emails via SendGrid. You'll need to set up the Mailer if you want to notify users of policy violations via email.
+
+## Configuration
+
+It's time to add some configuration specific to your Azure environment. You'll do this by making commits to the Git repo inside your Azure DevOps project.
+
+### Pipeline (`azure-pipelines.yml`)
+
+You'll need to edit some of the variables in your `azure-pipelines.yml` file, specifically the following:
+
+* `serviceConnectionAzureSubscription`: the name of the service connection you created in Azure DevOps (ex: `cloud-custodian`)
+* `keyVaultName`: the name of the Key Vault that was created by `setup.sh`
+* `repositoryId`: the id of your Azure DevOps Git repository. See [Project Settings] -> [Repositories] -> your repository. Your `repositoryId` will be contained in the URL in your browser
+
+### Subscriptions (`config.json`)
+
+To point the pipeline at your own Azure Subscriptions, update `policies/config.json` with your own subscriptionId's. 
+
+You can quickly get a list of subscriptions that you have access to by running `az account list -o table`

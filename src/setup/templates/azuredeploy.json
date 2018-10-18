@@ -4,12 +4,14 @@
   "parameters": {
     "custodianLogStorageAccountName": {
       "type": "string",
+      "defaultValue": "[concat('custodian', take(uniqueString(resourceGroup().id), 6))]",
       "metadata": {
         "description": "The name of the storage account to be used for Cloud Custodian output"
       }
     },
     "keyVaultName": {
       "type": "string",
+      "defaultValue": "[concat('custodian', take(uniqueString(resourceGroup().id), 6))]",
       "metadata": {
         "description": "The name of the Key Vault to be used for deployment secrets"
       }
@@ -44,7 +46,7 @@
           "type": "blobServices/containers",
           "apiVersion": "2018-03-01-preview",
           "dependsOn": [
-            "[parameters('custodianLogStorageAccountName')]"
+            "[resourceId('Microsoft.Storage/storageAccounts', parameters('custodianLogStorageAccountName'))]"
           ]
         }
       ]
@@ -72,5 +74,14 @@
       }
     }
   ],
-  "outputs": {}
+  "outputs": {
+    "storageAccountName": {
+      "type": "string",
+      "value": "[parameters('custodianLogStorageAccountName')]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[parameters('keyVaultName')]"
+    }
+  }
 }
