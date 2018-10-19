@@ -86,7 +86,7 @@ steps:
       scriptPath: "src/build/scripts/policy_runner.py"
       arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianBuildServicePrincipal) -o $(outputPath) --dryrun'
       failOnStderr: false
-  
+
   # Post the output of the dry run to the PR
   - task: PythonScript@0
     displayName: 'Post output to PR'
@@ -138,3 +138,4 @@ steps:
       PathToPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: package
       publishLocation: Container
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
