@@ -37,6 +37,15 @@ Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml]
 
 Policy validation is executed in [validate_policy_mode.py](src/build/scripts/validate_policy_mode.py)
 
+### Cloud Custodian Dry run
+After policy validation the pipeline executes a dry run of the modified policies.   
+
+A diff is run on all modified policies and a modified.yml file is created.  The dry run executes against this modified.yml.  
+
+The dry run will execute against the given subscription(s) but without taking action.  This shows what Cloud Custodian will execute in production.
+
+The output of this dry run is then posted back to the PR as a comment.
+
 
 ## Security
 
