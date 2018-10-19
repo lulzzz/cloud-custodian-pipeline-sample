@@ -12,7 +12,7 @@ variables:
   policyFilePath: policies/policies.build.json # replace with path to policy file if not default
   outputPath: output # replace with path for Custodian policy run output
   repositoryId: idOfTheRepository # replace with the id of the repository, see Project Settings -> Repositories -> Select repo and look at URL
-  cloudCustodianCommit: 8171207b6b4dc4d159be54cdc62ebff1b4907333 # Cloud Custodian commit to use
+  cloudCustodianCommit: 6186dc6637bead5696eda7e188b67cde7a866cde # Cloud Custodian commit to use
 
 # Build tasks
 steps:
