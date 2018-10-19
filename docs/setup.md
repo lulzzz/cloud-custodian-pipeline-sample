@@ -58,6 +58,8 @@ This script will create
 * Service Principal for Cloud Custodian policy execution
 * Key Vault to store secrets
 * Storage account for Custodian logs
+* Storage account queue for Custodian policies to push notifications to
+* [SendGrid Email Service](https://docs.microsoft.com/en-us/azure/sendgrid-dotnet-how-to-send-email) for sending Custodian email notifications
 
 There are a few lines of output that you'll use in later steps when configuring your pipeline. They'll be written to STDOUT and saved to `setup.log`
 
@@ -67,14 +69,57 @@ git clone https://github.com/Microsoft/cloud-custodian-pipeline-sample.git
 cd cloud-custodian-pipeline-sample/src/setup
 
 # Run one-time setup in your Azure Subscription
-# Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP PAT LOCATION
+# Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP PAT SENDGRID_PASS LOCATION
 # Example usage, substitute with your own values
-./setup.sh cloud-custodian-rg 00000000-0000-0000-0000-000000000000 vwferscof5rcoxfmxltowonqmrntspv5jqtvqwwjsndf7qwi2xxa westus2
+./setup.sh cloud-custodian-rg 00000000-0000-0000-0000-000000000000 vwferscof5rcoxfmxltowonqmrntspv5jqtvqwwjsndf7qwi2xxa supersecretpassword westus2
 ```
 
-## [Custodian Mailer](https://github.com/capitalone/cloud-custodian/blob/master/tools/c7n_mailer/README.md#using-on-azure)
+## Custodian Mailer
 
-Cloud Custodian does not directly send notifications to resource owners. Instead, it adds messages to an Azure Storage Queue and a Mailer component sends emails via SendGrid. You'll need to set up the Mailer if you want to notify users of policy violations via email.
+Cloud Custodian does not directly send notifications to resource owners. Instead, it adds messages to an Azure Storage Queue and a Mailer component sends emails via SendGrid. You'll need to set up the Mailer if you want to notify users of policy violations via email. [Read more details on Cloud Custodian Mailer](https://github.com/capitalone/cloud-custodian/blob/master/tools/c7n_mailer/README.md#using-on-azure).
+
+During the setup phase, the following Azure resources were created for the mailer.
+
+* [SendGrid Email Service](https://docs.microsoft.com/en-us/azure/sendgrid-dotnet-how-to-send-email): Used by mailer to send email notifications
+* [Azure Storage Queue](https://azure.microsoft.com/en-us/services/storage/queues/): A queue for Cloud Custodian to push policy notifications and for SendGrid to pull notifications to send.
+
+A few extra steps are needed to fully configure the mailer to send notifications.
+
+#### Get SendGrid API Token
+
+In the resource group specified when running `setup.sh`, click on the SendGrid resource named `custodian-mailer`.
+
+![SendGrid](/docs/images/sendgrid-resource.png)
+
+Next, click `Manage`. This will open the SendGrid portal.
+
+![SendGrid Manage](/docs/images/sendgrid-resource-manage.png)
+
+In the left navigation of the SendGrid Portal, click `Settings` -> `API Keys`.
+
+![Api Keys](/docs/images/sendgrid-settings-apikeys.png)
+
+Click the `Create API Key` button to generate a new key. Give the API key a name, select `Restricted Access` and give `Full Access` to `Mail Send`. Make sure to copy the API key that is generated. We will need it in the next step.
+
+![Create API Key](/docs/images/sendgrid-create-api-key.png)
+
+#### Deploy Cloud Custodian mailer as an Azure Function
+
+The Cloud Custodian mailer requires a YAML configuration file to work properly. This file is located in [/mailer/mailer.yml](/mailer/mailer.yml).
+
+Open mailer.yml and replace the values for the following:
+
+* `queue_url`: The storage account and storage queue that was created during setup.
+* `from_address`: Set the value to the email address that notifications will be sent as.
+* `sendgrid_api_key`: Set the value to the SendGrid API key generated previously.
+
+Deploying Cloud Custodian to Azure Functions requires a Linux environment. You will need to run the next steps on a Linux OS or Linux Docker container.
+
+Install and configure Cloud Custodian mailer on your machine by following [these installation instructions](https://github.com/capitalone/cloud-custodian/blob/master/tools/c7n_mailer/README.md#developer-install-os-x-el-capitan).
+
+Finally, run this command in the root of the repository to deploy the mailer.
+
+```c7n-mailer --config mailer/mailer.yml --update-lambda```
 
 ## Configuration
 
@@ -90,6 +135,6 @@ You'll need to edit some of the variables in your `azure-pipelines.yml` file, sp
 
 ### Subscriptions (`config.json`)
 
-To point the pipeline at your own Azure Subscriptions, update `policies/config.json` with your own subscriptionId's. 
+To point the pipeline at your own Azure Subscriptions, update `policies/config.json` with your own subscriptionId's.
 
 You can quickly get a list of subscriptions that you have access to by running `az account list -o table`

@@ -3,18 +3,20 @@ set -euo pipefail
 
 main(){
 
-  if [ "$#" -lt 3 ]; then
+  if [ "$#" -lt 4 ]; then
     cat << EOF
 Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP PAT (LOCATION)
 
-CUSTODIAN_RG: The name of the resource group to deploy resources into. If it does not exist, it will be created.
+CUSTODIAN_RG:   The name of the resource group to deploy resources into. If it does not exist, it will be created.
 
-PIPELINE_SP:  The objectId of the Service Principal used by the pipeline to retrieve secrets from Key Vault.
-              You can find this by navigating to [Project settings] > [Pipelines] > Service connections]
-              Select your service connection, and then choose [Manage Service Principal]
+PIPELINE_SP:    The objectId of the Service Principal used by the pipeline to retrieve secrets from Key Vault.
+                You can find this by navigating to [Project settings] > [Pipelines] > Service connections]
+                Select your service connection, and then choose [Manage Service Principal]
 
-PAT:          An Azure DevOps Personal Access Token, used to post feedback to pull requests. This will be stored
-              securely inside Key Vault
+PAT:            An Azure DevOps Personal Access Token, used to post feedback to pull requests. This will be stored
+                securely inside Key Vault
+
+SENDGRID_PASS:  The password used to setup and access the SendGrid Email Service Azure resource.
 
 LOCATION:     (Optional) The location of the Resource Group. Defaults to westus2
 EOF
@@ -24,17 +26,21 @@ EOF
   CUSTODIAN_RG=$1
   PIPELINE_SP=$2
   PAT=$3
-  LOCATION=${4-westus2}
+  SENDGRID_PASS=$4
+  LOCATION=${5-westus2}
+  MAILQUEUE_NAME=mailqueue
 
   # Create the infrastructure resources needed to create an environment
   echo "Deploying resources to $CUSTODIAN_RG"
   az group create -n $CUSTODIAN_RG -l $LOCATION > /dev/null
-  DEPLOYMENT=$(az group deployment create -g $CUSTODIAN_RG --template-file templates/azuredeploy.json --parameters pipelineServicePrincipalObjectId=$PIPELINE_SP -o json)
+  DEPLOYMENT=$(az group deployment create -g $CUSTODIAN_RG --template-file templates/azuredeploy.json --parameters pipelineServicePrincipalObjectId=$PIPELINE_SP sendGridPassword=$SENDGRID_PASS -o json)
   STORAGE_ACCT=$(echo $DEPLOYMENT | jq -r .properties.outputs.storageAccountName.value)
   VAULT=$(echo $DEPLOYMENT | jq -r .properties.outputs.keyVaultName.value)
+  az storage queue create --name $MAILQUEUE_NAME --account-name $STORAGE_ACCT > /dev/null
 
   log "Storage account for Cloud Custodian logs created: $STORAGE_ACCT"
   log "Key Vault for pipelines created: $VAULT"
+  log "Storage queue for Cloud Custodian mailer created: https://$STORAGE_ACCT.queue.core.windows.net/$MAILQUEUE_NAME"
 
   # Add permissions to allow setting Key Vault secrets
   az keyvault set-policy -n $VAULT --upn $(az account show --query 'user.name' -o tsv) --secret-permissions get list set delete backup restore recover > /dev/null
@@ -64,7 +70,7 @@ create_sp(){
     | base64)
 
   az keyvault secret set --vault-name $2 -n $1 -e base64 --description "Service Principal for Cloud Custodian" --value "$SECRET" > /dev/null
-  
+
   log "Created Service Principal: $SP_NAME ($SPID)"
 }
 

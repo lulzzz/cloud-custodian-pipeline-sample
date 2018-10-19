@@ -1,0 +1,4 @@
+queue_url: asq://<your-storage-account-name>.queue.core.windows.net/mailqueue
+from_address: <from-email-address>
+sendgrid_api_key: <api-key>
+function_servicePlanName: c7n_mailer

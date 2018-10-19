@@ -10,6 +10,30 @@
     },
     "pipelineServicePrincipalObjectId": {
       "value": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    },
+    "sendGridName": {
+      "value": "custodian-mailer"
+    },
+    "sendGridPlanName": {
+      "value": "free"
+    },
+    "sendGridAcceptMarketingEmails": {
+      "value": true
+    },
+    "sendGridContactEmail": {
+      "value": "a@b.com"
+    },
+    "sendGridContactFirstName": {
+      "value": "First"
+    },
+    "sendGridContactLastName": {
+      "value": "Last"
+    },
+    "sendGridContactCompanyName": {
+      "value": "Company"
+    },
+    "sendGridContactWebsite": {
+      "value": "Website"
     }
   }
 }

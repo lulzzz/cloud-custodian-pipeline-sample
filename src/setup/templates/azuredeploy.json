@@ -21,6 +21,73 @@
       "metadata": {
         "description": "objectId of the Azure Pipelines Service Principal. Get via `az ad sp show`"
       }
+    },
+    "sendGridName": {
+      "type": "string",
+      "defaultValue": "custodian-mailer",
+      "metadata": {
+        "description": "The name of the SendGrid Azure resource for Cloud Custodian email notifications"
+      }
+    },
+    "sendGridPlanName": {
+      "type": "string",
+      "allowedValues": [
+        "silver",
+        "bronze",
+        "free"
+      ],
+      "defaultValue": "free",
+      "metadata": {
+        "description": "The SendGrid pricing tier plan name"
+      }
+    },
+    "sendGridPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password used to sign into the SendGrid portal"
+      }
+    },
+    "sendGridAcceptMarketingEmails": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Acceptance of SendGrid Legal terms"
+      }
+    },
+    "sendGridContactEmail": {
+      "type": "string",
+      "defaultValue": "a@b.com",
+      "metadata": {
+        "description": "Contact email used by SendGrid for support agents / technical contacts"
+      }
+    },
+    "sendGridContactFirstName": {
+      "type": "string",
+      "defaultValue": "First",
+      "metadata": {
+        "description": "Contact first name used by SendGrid for support agents / technical contacts"
+      }
+    },
+    "sendGridContactLastName": {
+      "type": "string",
+      "defaultValue": "Last",
+      "metadata": {
+        "description": "Contact last name used by SendGrid for support agents / technical contacts"
+      }
+    },
+    "sendGridContactCompanyName": {
+      "type": "string",
+      "defaultValue": "Company",
+      "metadata": {
+        "description": "Contact company name used by SendGrid for support agents / technical contacts"
+      }
+    },
+    "sendGridContactWebsite": {
+      "type": "string",
+      "defaultValue": "website",
+      "metadata": {
+        "description": "Contact company website used by SendGrid for support agents / technical contacts"
+      }
     }
   },
   "variables": {
@@ -71,6 +138,26 @@
           "name": "standard",
           "family": "A"
         }
+      }
+    },
+    {
+      "type": "Sendgrid.Email/accounts",
+      "name": "[parameters('sendGridName')]",
+      "apiVersion": "2015-01-01",
+      "location": "[resourceGroup().location]",
+      "plan": {
+        "name": "[parameters('sendGridPlanName')]",
+        "publisher": "Sendgrid",
+        "product": "sendgrid_azure"
+      },
+      "properties": {
+        "password": "[parameters('sendGridPassword')]",
+        "acceptMarketingEmails": "[parameters('sendGridAcceptMarketingEmails')]",
+        "email": "[parameters('sendGridContactEmail')]",
+        "firstName": "[parameters('sendGridContactFirstName')]",
+        "lastName": "[parameters('sendGridContactLastName')]",
+        "company": "[parameters('sendGridContactCompanyName')]",
+        "website": "[parameters('sendGridContactWebsite')]"
       }
     }
   ],
