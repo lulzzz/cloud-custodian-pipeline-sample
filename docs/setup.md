@@ -34,11 +34,11 @@ Next, you'll need to configure Azure DevOps so that it can connect to your Azure
 
 ![Create a service connection](../docs/images/new-service-connection.png)
 
-You'll need the Azure Active Directory objectId for the Service Principal that was created so that you can grant it access to the secrets that are stored inside Key Vault. Follow these steps to get the objectId. You'll use this when you run `setup.sh` to create the environment for your Cloud Custodian policies
+You'll need the Azure Active Directory appId for the Service Principal that was created so that you can grant it access to the secrets that are stored inside Key Vault. Follow these steps to get the appId. You'll use this when you run `setup.sh` to create the environment for your Cloud Custodian policies
 
 ![Manage Service Principal](../docs/images/manage-service-principal.png)
 
-![Get Service Principal objectId](../docs/images/get-object-id.png)
+![Get Service Principal appId](../docs/images/get-service-connection-app-id.png)
 
 ### Create a Personal Access Token
 
