@@ -1,6 +1,8 @@
 {
   "files": [
     "delete-empty-resource-groups.yml",
-    "find-idle-vms.yml"
+    "find-idle-vms.yml",
+    "find-unused-premium-disks.yml",
+    "find-vms-with-password-authentication.yml"
   ]
 }

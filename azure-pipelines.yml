@@ -62,7 +62,6 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'policies/policystream.py'
       arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
-      failOnStderr: false
 
   # Run Custodian validate
   - script: 'custodian validate $(modifiedPoliciesFilePath)'
@@ -75,7 +74,6 @@ steps:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
       arguments: '-m $(modifiedPoliciesFilePath)'
-      failOnStderr: false
 
   # Run all modified Custodian policies in Dryrun mode
   - task: PythonScript@0
@@ -84,7 +82,6 @@ steps:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/policy_runner.py"
       arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianBuildServicePrincipal) -o $(outputPath) --dryrun'
-      failOnStderr: false
 
   # Post the output of the dry run to the PR
   - task: PythonScript@0
@@ -93,7 +90,6 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'src/build/scripts/post_to_pr.py'
       arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
-      failOnStderr: false
 
   # Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
