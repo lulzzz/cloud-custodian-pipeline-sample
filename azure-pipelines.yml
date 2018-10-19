@@ -63,7 +63,7 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'policies/policystream.py'
       arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
-      faillOnStderr: false
+      failOnStderr: false
 
   # Run Custodian validate
   - script: 'custodian validate $(modifiedPoliciesFilePath)'
@@ -94,7 +94,7 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'src/build/scripts/post_to_pr.py'
       arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
-      faillOnStderr: false
+      failOnStderr: false
 
   # Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
