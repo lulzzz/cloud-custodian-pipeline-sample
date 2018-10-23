@@ -1,0 +1,25 @@
+policies:
+  - name: delete-empty-resource-groups-notify
+    description: Removes any empty resource groups from subscription and send email notification
+    resource: azure.resourcegroup
+    mode:
+      type: azure-periodic
+      schedule: '0 0 * * * *'
+      provision-options:
+        servicePlan:
+          name: custodiansamplepipeline
+      execution-options:
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodian
+    filters:
+      - type: empty-group
+    actions:
+      - type: delete
+      - type: notify
+        template: default.html
+        priority_header: 1
+        subject: "Empty resource groups deleted - [Subscription {{ account }}]"
+        to:
+          - you@youremail.com
+        transport:
+          type: asq
+          queue: https://storageaccount.queue.core.windows.net/mailqueue
