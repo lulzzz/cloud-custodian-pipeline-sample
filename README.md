@@ -22,7 +22,9 @@ You'll need to do some one-time setup to configure security, CI/CD, the data pro
 
 The sample uses an [Azure DevOps YAML-based build](https://docs.microsoft.com/en-us/azure/devops/pipelines/get-started-yaml?view=vsts) pointing to [azure-pipelines.yml](/azure-pipelines.yml). You will need to edit this file and replace variable values with values specific to your Azure subscription and environment. The build runs on pull requests to validate new policies and identify what resources will be affected by proposed changes. Check out the [Build](docs/build.md) docs for a deep dive on individual tasks.
 
-## Release
+## [Releases](docs/release.md)
+
+Currently, Azure DevOps does not support YAML-based releases. You will need to follow our [Release](docs/release.md) docs to set up your deployment strategy.
 
 ## Visualization
 
