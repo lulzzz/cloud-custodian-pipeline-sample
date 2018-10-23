@@ -117,7 +117,15 @@ Deploying Cloud Custodian to Azure Functions requires a Linux environment. You w
 
 Install and configure Cloud Custodian mailer on your machine by following [these installation instructions](https://github.com/capitalone/cloud-custodian/blob/master/tools/c7n_mailer/README.md#developer-install-os-x-el-capitan).
 
-Next, ensure you have set one of the [Cloud Custodian authentication options for Azure](http://capitalone.github.io/cloud-custodian/docs/azure/authentication.html).
+Cloud Custodian Mailer requires a `Service Principal` to access the storage queue. We will use the `CustodianReleaseServicePrincipal` Service Principal that was created when you ran [setup.sh](../src/setup/setup.sh). Ensure you have set the following environment variables before deploying the mailer. More details on Authentication can be [read here](http://capitalone.github.io/cloud-custodian/docs/azure/authentication.html).
+
+```
+export AZURE_TENANT_ID=<tenant_id>
+export AZURE_SUBSCRIPTION_ID=<subscription_id>
+export AZURE_CLIENT_ID=<service_principal_app_id>
+export AZURE_CLIENT_SECRET=<service_principal_secret>
+```
+
 
 Finally, run this command in the root of the repository to deploy the mailer.
 
