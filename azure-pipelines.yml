@@ -14,7 +14,7 @@ variables:
   outputPath: output # replace with path for Custodian policy run output
   repositoryId: idOfTheRepository # replace with the id of the repository, see Project Settings -> Repositories -> Select repo and look at URL
   cloudCustodianCommit: 6186dc6637bead5696eda7e188b67cde7a866cde # Cloud Custodian commit to use
-  validatePolicyChangesOnly: true
+  validatePolicyChangesOnly: True
 
 # Build tasks
 steps:
@@ -66,7 +66,7 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'policies/policystream.py'
       arguments: 'diff -r . --source origin/master --target HEAD -o $(policiesFilePath)'
-      condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], true))
+    condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], True))
 
   # Gather all policies for validation when validatePolicyChangesOnly is false
   - task: PythonScript@0
@@ -75,7 +75,7 @@ steps:
       scriptSource: 'filePath'
       scriptPath: 'src/build/scripts/get_all_policies.py'
       arguments: '-r . -o $(policiesFilePath)'
-      condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], false))
+    condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], False))
 
   # Run Custodian validate
   - script: 'custodian validate $(policiesFilePath)'
