@@ -19,7 +19,7 @@ this [document](https://www.pygit2.org/install.html#quick-install).
 Installing the policystream.py file and its prerequisites are triggered as Pipeline Build tasks in [azure-pipelines.yml](azure-pipelines.yml)
 
 ### Get Modifications to Custodian Policies
-All modified Cloud Custodian policies are discovered by running the policystream.py script installed from Cloud Custodian. The command checks the difference between the master branch of a repository and the source branch. The tool outputs to a modified.yml file that contains all the new or modified policies in one yml file. 
+All modified Cloud Custodian policies are discovered by running the policystream.py script installed from Cloud Custodian. The command checks the difference between the master branch of a repository and the source branch. The tool outputs to a policies.yml file that contains all the new or modified policies in one yml file. 
 
 Getting Custodian policy modifications is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
@@ -40,7 +40,7 @@ Policy validation is executed in [validate_policy_mode.py](src/build/scripts/val
 ### Cloud Custodian Dry run
 After policy validation the pipeline executes a dry run of the modified policies.   
 
-A diff is run on all modified policies and a modified.yml file is created.  The dry run executes against this modified.yml.  
+A diff is run on all modified policies and a policies.yml file is created.  The dry run executes against this policies.yml.  
 
 The dry run will execute against the given subscription(s) but without taking action.  This shows what Cloud Custodian will execute in production.
 

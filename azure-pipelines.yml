@@ -1,3 +1,4 @@
+name: $(Build.SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 trigger: [ master ]
 pool:
   vmImage: 'Ubuntu 16.04'
@@ -7,12 +8,13 @@ variables:
   serviceConnectionAzureSubscription: nameOfTheServiceConnection # replace with Azure DevOps Azure ARM service connection name
   keyVaultName: nameOfKeyVault # replace with name of KeyVault used to store CI/CD pipeline secrets
   secretsFilter: 'CustodianBuildServicePrincipal,AzureDevOpsApiToken' # replace with name of secret or * for all secrets
-  modifiedPoliciesFilePath: policies/modified.yml # replace with name of yml file containing all policies that have been modified and need to be validated
+  policiesFilePath: policies/policies.yml # replace with name of yml file containing the policies that need to be validated
   configFilePath: policies/config.json # replace with path to policy config file if not default
   policyFilePath: policies/policies.build.json # replace with path to policy file if not default
   outputPath: output # replace with path for Custodian policy run output
   repositoryId: idOfTheRepository # replace with the id of the repository, see Project Settings -> Repositories -> Select repo and look at URL
   cloudCustodianCommit: 6186dc6637bead5696eda7e188b67cde7a866cde # Cloud Custodian commit to use
+  validatePolicyChangesOnly: true
 
 # Build tasks
 steps:
@@ -57,29 +59,39 @@ steps:
             chmod +x policies/policystream.py
     displayName: 'Get policystream script'
 
-  # Run policystream.py to get modified policies
+  # Run policystream.py to get modified policies by default
   - task: PythonScript@0
     displayName: 'Get all custodian policies that have been modified'
     inputs:
       scriptSource: 'filePath'
       scriptPath: 'policies/policystream.py'
-      arguments: 'diff -r . --source origin/master --target HEAD -o $(modifiedPoliciesFilePath)'
+      arguments: 'diff -r . --source origin/master --target HEAD -o $(policiesFilePath)'
+      condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], true))
+
+  # Gather all policies for validation when validatePolicyChangesOnly is false
+  - task: PythonScript@0
+    displayName: 'Get all custodian policies'
+    inputs:
+      scriptSource: 'filePath'
+      scriptPath: 'src/build/scripts/get_all_policies.py'
+      arguments: '-r . -o $(policiesFilePath)'
+      condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], false))
 
   # Run Custodian validate
-  - script: 'custodian validate $(modifiedPoliciesFilePath)'
-    displayName: 'Validate all modified policies'
+  - script: 'custodian validate $(policiesFilePath)'
+    displayName: 'Validate policies'
 
   # Check if all policies are Function modes
   - task: PythonScript@0
-    displayName: 'Validate that modified policies are in function mode'
+    displayName: 'Validate that policies are in function mode'
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/validate_policy_mode.py"
-      arguments: '-m $(modifiedPoliciesFilePath)'
+      arguments: '-m $(policiesFilePath)'
 
-  # Run all modified Custodian policies in Dryrun mode
+  # Run Custodian policies in Dryrun mode
   - task: PythonScript@0
-    displayName: 'Dry run Custodian policies to get all resources that will be affected by the policy'
+    displayName: 'Dry run Custodian policies to get all resources that will be affected'
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/policy_runner.py"
@@ -125,7 +137,7 @@ steps:
   - task: CopyFiles@2
     displayName: 'Copy configuration files'
     inputs:
-      contents: 'policies/*'
+      contents: 'policies/*.json'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
 
   # Copy deployment scripts
@@ -140,15 +152,8 @@ steps:
   - task: CopyFiles@2
     displayName: 'Copy policies'
     inputs:
-      contents: '*.yml'
+      contents: '$(policiesFilePath)'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
-
-  # Remove azure-pipelines.yml from build artifacts
-  - task: DeleteFiles@1
-    displayName: 'Remove azure-pipelines.yml from build artifacts'
-    inputs:
-      sourceFolder: '$(Build.ArtifactStagingDirectory)'
-      contents: azure-pipelines.yml
 
   # Publish Build Artifacts
   - task: PublishBuildArtifacts@1
@@ -156,4 +161,3 @@ steps:
       PathToPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: package
       publishLocation: Container
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))

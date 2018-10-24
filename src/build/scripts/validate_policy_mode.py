@@ -4,15 +4,15 @@ import json
 import sys
 
 class ValidatePolicyMode(object):
-    def __init__(self, modified_path):
-        self.modified_path = modified_path
+    def __init__(self, policies_path):
+        self.policies_path = policies_path
 
     def run(self):
-        self._run_validate_policies(self.modified_path)
+        self._run_validate_policies(self.policies_path)
 
     @staticmethod
-    def _run_validate_policies(modified_path):
-        with open(modified_path) as stream:
+    def _run_validate_policies(policies_path):
+        with open(policies_path) as stream:
             policies = yaml.load(stream)['policies']
             for policy in policies:
                 if 'mode' not in policy.keys(
@@ -22,15 +22,15 @@ class ValidatePolicyMode(object):
 
 
 if __name__ in "__main__":
-    modified_path = ''
+    policies_path = ''
     try:
         opts, args = getopt.getopt(sys.argv[1:], "m:")
     except getopt.GetoptError:
-        print('validate_policy_mode.py -m <pathto_modified.yml>')
+        print('validate_policy_mode.py -m <pathto_poolicies.yml>')
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-m"):
-            modified_path = arg
+            policies_path = arg
 
-        runner = ValidatePolicyMode(modified_path)
+        runner = ValidatePolicyMode(policies_path)
         runner.run()
