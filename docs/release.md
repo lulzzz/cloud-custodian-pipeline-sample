@@ -13,7 +13,6 @@
 3. Add the following release variables, which the release tasks will reference. This will contain information such as file paths, Key Vault names, service connection names, and other information we will consume during the release. Use the same `service connection name` previously setup during the build.
 
     ```
-    cloudCustodianCommit : <commit hash from azure-pipelines.yml>
     configFilePath : ./artifacts/package/policies/config.json
     keyVaultName : <key vault name>
     outputPath : azure://<storage_account>.blob.core.windows.net/custodianlogs
@@ -49,15 +48,12 @@
 
     ![Install Tools](../docs/images/install-tools.png)
 
-9. Install Cloud Custodian by using the same git commit hash as listed in the `azure-pipelines.yml` file. The commit hash is to ensure we're testing with the same version of Cloud Custodian as the build.
+9. Install Cloud Custodian by using the python package artifacts published during the build. This will ensure we're always using the same version of Cloud Custodian as the build.
 
     ```
-    git clone https://github.com/capitalone/cloud-custodian -n &&
-    cd cloud-custodian &&
-    git checkout $(cloudCustodianCommit) &&
-    cd .. &&
-    pip install ./cloud-custodian &&
-    pip install ./cloud-custodian/tools/c7n_azure
+    pip install ./artifacts/package/c7n-dist/c7n.tar.gz
+    pip install ./artifacts/package/c7n-dist/c7n_azure.tar.gz
+    custodian version
     ```
 
     ![Install Cloud Custodian](../docs/images/install-cloud-custodian.png)
