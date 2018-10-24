@@ -28,6 +28,23 @@ Currently, Azure DevOps does not support YAML-based releases. You will need to f
 
 ## Visualization
 
+Cloud custodian generates logs in multiple formats and stores them in Azure Blob Storage. One of the output types contains .json of the resources identified by policies that were run. Those logs can be extracted by Azure Power BI and presented in a visual form. Sample Power BI report (custodian-policy-results.pbix) can be found in the reports directory.
+
+* open the file in Power BI desktop application
+* right click on the custodianlogs data source and chose "Edit query"
+* in the opened query editor right click on the custodianlogs query and chose "Advanced Editor"
+* replace storageaccount in the first line with your storage account name
+* click "Close & Apply" button
+
+The report will show:
+
+* list of policies that were executed
+* list of results
+* total count of identified resources
+* total count of identified subscriptions
+
+For adding additional report items and visualization see [Power BI documentation](https://docs.microsoft.com/en-us/power-bi/).
+
 ## Security Considerations
 
 The general assumption in this sample is that only trusted people can modify policies. [azure-pipelines.yml](azure-pipelines.yml) contains the build definition that will be executed automatically upon receiving a pull request. This means that whoever can send pull requests can execute arbitrary code and access the Service Principals stored in Key Vault - which have access to your Azure Subscriptions. **Do not accept pull request from untrusted people**.
