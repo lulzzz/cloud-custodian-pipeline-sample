@@ -106,25 +106,18 @@ steps:
       arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
 
   # Package c7n python package artifact
-  - script: mkdir -p $AGENT_BUILDDIRECTORY/temp/c7n-dist &&
+  - script: mkdir -p $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist && 
       cd $AGENT_BUILDDIRECTORY/temp/cloud-custodian &&
       python setup.py sdist &&
-      mv ./dist/c7n-*.tar.gz $AGENT_BUILDDIRECTORY/temp/c7n-dist/c7n.tar.gz
+      mv ./dist/c7n-*.tar.gz $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist/c7n.tar.gz
     displayName: 'Package c7n python package artifact'
 
   # Package c7n-azure python package artifact
-  - script: mkdir -p $AGENT_BUILDDIRECTORY/temp/c7n-dist &&
+  - script: mkdir -p $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist &&
       cd $AGENT_BUILDDIRECTORY/temp/cloud-custodian/tools/c7n_azure &&
       python setup.py sdist &&
-      mv ./dist/c7n_azure*.tar.gz $AGENT_BUILDDIRECTORY/temp/c7n-dist/c7n_azure.tar.gz
+      mv ./dist/c7n_azure*.tar.gz $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist/c7n_azure.tar.gz
     displayName: 'Package c7n-azure python package artifact'
-
-  # Copy Cloud Custodian python packages
-  - task: CopyFiles@2
-    displayName: 'Copy Cloud Custodian python packages'
-    inputs:
-      contents: '$AGENT_BUILDDIRECTORY/temp/c7n-dist/**/*'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
 
   # Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
