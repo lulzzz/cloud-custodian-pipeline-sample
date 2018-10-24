@@ -5,9 +5,6 @@
 ### Installing Cloud Custodian
 Typically Cloud Custodian for Azure is installed by installing the [`c7n`](https://pypi.org/project/c7n/) and [`c7n_azure`](https://pypi.org/project/c7n_azure/) PyPI packages. Instead of installing the packages, the build task is installing from a branch with workarounds to make unique storage accounts. There are several required changes that need to be in the PyPI packages for this pipeline to work as intended. When those changes are in the latests PyPI packages it is recommended to install those packages and not a specific Github branch. 
 
-Tracking changes:
- * [Be able to specify a storage account](https://github.com/capitalone/cloud-custodian/pull/2955)
-
 Installing Cloud Custodian is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
 ### Installing Cloud Custodian's PolicyStream Tool
@@ -18,15 +15,22 @@ this [document](https://www.pygit2.org/install.html#quick-install).
 
 Installing the policystream.py file and its prerequisites are triggered as Pipeline Build tasks in [azure-pipelines.yml](azure-pipelines.yml)
 
-### Get Modifications to Custodian Policies
-All modified Cloud Custodian policies are discovered by running the policystream.py script installed from Cloud Custodian. The command checks the difference between the master branch of a repository and the source branch. The tool outputs to a policies.yml file that contains all the new or modified policies in one yml file. 
+### Get Modifications to Custodian Policies (`validatePolicyChangesOnly: true`)
+The default CI behavior is to run checks only on modified policies. All modified Cloud Custodian policies are discovered by running the policystream.py script installed from Cloud Custodian. The command checks the difference between the master branch of a repository and the source branch. The tool outputs to a policies.yml file that contains all the new or modified policies in one yml file. 
 
 Getting Custodian policy modifications is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
+> This task is skipped when queuing a manual build to validate all policies.
+
 > Note: Policies must currently be placed at the root of the repository until [cloud-custodian/pull/2977](https://github.com/capitalone/cloud-custodian/pull/2977) is merged
 
+### Get All Custodian Policies (`validatePolicyChangesOnly: false`)
+The build can optionally validate all policies in the repository. This is useful when making changes to the CI/CD pipeline itself and policies are not being touched. To run in this mode, queue a manual build and set `validatePolicyChangesOnly: false`.
+
+> This task is skipped by default, when validating only modified policies.
+
 ### Cloud Custodian Policy Validation
-All modified Cloud Custodian policies are linted and validated using the "custodian validate" command. 
+Cloud Custodian policies are linted and validated using the `custodian validate` command. 
 
 Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
@@ -38,9 +42,7 @@ Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml]
 Policy validation is executed in [validate_policy_mode.py](src/build/scripts/validate_policy_mode.py)
 
 ### Cloud Custodian Dry run
-After policy validation the pipeline executes a dry run of the modified policies.   
-
-A diff is run on all modified policies and a policies.yml file is created.  The dry run executes against this policies.yml.  
+After policy validation the pipeline executes a dry run of the policies.   
 
 The dry run will execute against the given subscription(s) but without taking action.  This shows what Cloud Custodian will execute in production.
 
