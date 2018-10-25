@@ -10,7 +10,13 @@
 
     ![Add Artifact](../docs/images/add-artifact.png)
 
-3. Add the following release variables, which the release tasks will reference. This will contain information such as file paths, Key Vault names, service connection names, and other information we will consume during the release. Use the same `service connection name` previously setup during the build.
+3. After adding a targeted build pipeline, enable continuous deployment by clicking the lightning bolt. Ensure the master branch is the targeted deployment branch.
+
+    **Note**: Because this reference uses the same build pipeline for CI and PR validation, not setting master as the target branch will cause the release to deploy PR builds.
+
+    ![Add Continuous Deployment](../docs/images/continuous-deployment.png)
+    
+4. Add the following release variables, which the release tasks will reference. This will contain information such as file paths, Key Vault names, service connection names, and other information we will consume during the release. Use the same `service connection name` previously setup during the build.
 
     ```
     configFilePath : ./artifacts/package/policies/config.json
@@ -24,23 +30,23 @@
 
     ![Add Release Variables](../docs/images/add-release-variables.png)
 
-4. Add a new release stage and select empty job. We will fill this out throughout the guide.
+5. Add a new release stage and select empty job. We will fill this out throughout the guide.
 
     ![Add Stage](../docs/images/empty-job.png)
 
-5. Ensure that our build stage is using the `Hosted Ubuntu 1604` build image.
+6. Ensure that our release stage is using the `Hosted Ubuntu 1604` image.
 
     ![Ubuntu Build Agent](../docs/images/ubuntu-agent.png)
 
-6. Add a task to use a Python version. Ensure that the Python version is `3.6`.
+7. Add a task to use a Python version. Ensure that the Python version is `3.6`.
 
     ![Python Version](../docs/images/python-version.png)
 
-7. Cloud Custodian requires a `Service Principal` to modify Azure Resources. We previously stored this release service principal in Azure Key Vault during setup called `CustodianReleaseServicePrincipal`. To access this Key Vault, we previously established a service connection. Set this Azure Subscription and pull the keys from Key Vault.
+8. Cloud Custodian requires a `Service Principal` to modify Azure Resources. We previously stored this release service principal in Azure Key Vault during setup called `CustodianReleaseServicePrincipal`. To access this Key Vault, we previously established a service connection. Set this Azure Subscription and pull the keys from Key Vault.
 
     ![Get Release Keys](../docs/images/get-release-secrets.png)
 
-8. Install the necessary tools for installing custodian
+9. Install the necessary tools for installing custodian
 
     ```
     python -m pip install --upgrade pip setuptools wheel
@@ -58,7 +64,7 @@
 
     ![Install Cloud Custodian](../docs/images/install-cloud-custodian.png)
 
-10. Deploy your validated policies that were packaged in your artifact by using the `policyRunnerFile`. This will ensure that your policies are deployed on Azure Functions and logs are stored on your specified storage account. Ensure your release is saved by clicking the `save` button before leaving.
+11. Deploy your validated policies that were packaged in your artifact by using the `policyRunnerFile`. This will ensure that your policies are deployed on Azure Functions and logs are stored on your specified storage account. Ensure your release is saved by clicking the `save` button before leaving.
 
     ```
     Script path: $(policyRunnerFile)
