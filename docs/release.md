@@ -1,5 +1,9 @@
 # Release Design
 
+## Release Permissions
+
+`Cloud Custodian` requires the contributor role to manipulate Azure resources. During `setup.sh`, a Service Principal is created and stored into Azure KeyVault for Cloud Custodian. In the following release setup, we will retrieve this Service Principal and use it.
+
 ## Release Setup
 
 1. Create a new release
