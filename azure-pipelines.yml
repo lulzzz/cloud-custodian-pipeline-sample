@@ -72,6 +72,7 @@ steps:
       esac
       echo "Modified policies:"
       cat $(policiesFilePath)
+    displayName: 'Get all custodian policies that have been modified'
     condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], True))
 
   # Gather all policies for validation when validatePolicyChangesOnly is false
