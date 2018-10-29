@@ -54,18 +54,24 @@ steps:
       pip install ./cloud-custodian/tools/c7n_azure
     displayName: 'Install Cloud Custodian'
 
-  # Get policystream.py
-  - script: wget -O policies/policystream.py 'https://raw.githubusercontent.com/capitalone/cloud-custodian/master/tools/ops/policystream.py' &&
-            chmod +x policies/policystream.py
-    displayName: 'Get policystream script'
+  # Get c7n-policystream python package
+  - script: pip install c7n-policystream
+    displayName: 'Get c7n-policystream python package'
 
-  # Run policystream.py to get modified policies by default
-  - task: PythonScript@0
-    displayName: 'Get all custodian policies that have been modified'
-    inputs:
-      scriptSource: 'filePath'
-      scriptPath: 'policies/policystream.py'
-      arguments: 'diff -r . --source origin/master --target HEAD -o $(policiesFilePath)'
+  # Run c7n-policystream to get modified policies by default
+  - script: |
+      case $(Build.Reason) in
+      "PullRequest"*)
+        echo "Getting modified policies for pull request"
+        c7n-policystream diff -r . --source origin/master --target HEAD -o $(policiesFilePath)
+        ;;
+      *)
+        LAST_RELEASED_COMMIT_ID=$(./src/build/scripts/getLastReleasedCommit.sh "$(System.TeamFoundationCollectionUri)" "$(System.TeamProject)" "$(System.TeamProjectId)" $(System.DefinitionId) $(System.AccessToken))
+        echo "Getting modified policies since the last released commit id $LAST_RELEASED_COMMIT_ID"
+        c7n-policystream diff -r . --source $LAST_RELEASED_COMMIT_ID -o $(policiesFilePath)
+      esac
+      echo "Modified policies:"
+      cat $(policiesFilePath)
     condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], True))
 
   # Gather all policies for validation when validatePolicyChangesOnly is false
@@ -106,7 +112,7 @@ steps:
       arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(AzureDevOpsApiToken)" -d "$(outputPath)" --enable-vso-output'
 
   # Package c7n python package artifact
-  - script: mkdir -p $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist && 
+  - script: mkdir -p $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist &&
       cd $AGENT_BUILDDIRECTORY/temp/cloud-custodian &&
       python setup.py sdist &&
       mv ./dist/c7n-*.tar.gz $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist/c7n.tar.gz
