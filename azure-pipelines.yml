@@ -147,9 +147,9 @@ steps:
       targetFolder: '$(Build.ArtifactStagingDirectory)'
       flattenFolders: true
 
-  # Copy policies
+  # Copy policies to deploy
   - task: CopyFiles@2
-    displayName: 'Copy policies'
+    displayName: 'Copy policies to deploy'
     inputs:
       contents: '$(policiesFilePath)'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
