@@ -37,7 +37,7 @@ class PostToPr:
                             output += f"No output in the dry run of this policy\n\n"
         return output
 
-    def post_output_to_pr(self, organization_uri, project, repo_id, pull_request_id, token, comment_content):
+    def post_output_to_pr(self, organization_uri, project, repo_id, pull_request_id, access_token, comment_content):
         if comment_content == '':
             print(f"{vso_task_skipped if self.enable_vso_output else ''}No Cloud Custodian output found in output dir")
             sys.exit()
