@@ -3,18 +3,15 @@ set -euo pipefail
 
 main(){
 
-  if [ "$#" -lt 4 ]; then
+  if [ "$#" -lt 3 ]; then
     cat << EOF
-Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP PAT (LOCATION)
+Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP (LOCATION)
 
 CUSTODIAN_RG:   The name of the resource group to deploy resources into. If it does not exist, it will be created.
 
 PIPELINE_SP:    The appId of the Service Principal used by the pipeline to retrieve secrets from Key Vault.
                 You can find this by navigating to [Project settings] > [Pipelines] > Service connections]
                 Select your service connection, and then choose [Manage Service Principal]
-
-PAT:            An Azure DevOps Personal Access Token, used to post feedback to pull requests. This will be stored
-                securely inside Key Vault
 
 SENDGRID_PASS:  The password used to setup and access the SendGrid Email Service Azure resource.
 
@@ -25,9 +22,8 @@ EOF
 
   CUSTODIAN_RG=$1
   PIPELINE_SP=$2
-  PAT=$3
-  SENDGRID_PASS=$4
-  LOCATION=${5-westus2}
+  SENDGRID_PASS=$3
+  LOCATION=${4-westus2}
   MAILQUEUE_NAME=mailqueue
 
   # Translate the Service Principal appId into an objectId
@@ -49,7 +45,6 @@ EOF
   az keyvault set-policy -n $VAULT --upn $(az account show --query 'user.name' -o tsv) --secret-permissions get list set delete backup restore recover > /dev/null
 
   # Add secrets to Key Vault
-  az keyvault secret set --vault-name $VAULT -n AzureDevOpsApiToken --description "Azure DevOps PAT token" --value $PAT > /dev/null
   az keyvault secret set --vault-name $VAULT -n SendGridPassword --description "SendGrid" --value $SENDGRID_PASS > /dev/null
 
   # Create Service Principals

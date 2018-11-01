@@ -48,7 +48,6 @@ The dry run will execute against the given subscription(s) but without taking ac
 
 The output of this dry run is then posted back to the PR as a comment.
 
-
 ## Security
 
 The pipeline uses three Service Principals to access Azure:
@@ -58,7 +57,6 @@ The pipeline uses three Service Principals to access Azure:
 * **CustodianReleaseServicePrincipal**: used at runtime by Cloud Custodian to access Azure API's. This SP needs access to execute policies across your targeted subscriptions. If your policies modify resources, such as by adding tags or stopping VMs, this SP will need a role like `Contributor`. These credentials are stored securely in Key Vault.
 
 * **Azure DevOps Service Connection**: used by Azure Pipelines to retrieve the other credentials from Key Vault and inject them as part of Build and Release. These credentials are automatically generated and managed by Azure DevOps.
-
 
 > **Note**: Service Principal credentials stored in Key Vault are base64 encoded JSON in the following format:
 > ```

@@ -40,14 +40,6 @@ You'll need the Azure Active Directory appId for the Service Principal that was 
 
 ![Get Service Principal appId](../docs/images/get-service-connection-app-id.png)
 
-### Create a Personal Access Token
-
-After checking the impact of changed policies, the build will post feedback to the Pull Request. To do this, it needs an Azure DevOps API token. Follow [these steps](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=vsts) to create a Personal Access Token.
-
-![Create a new personal access token](../docs/images/new-personal-access-token.png)
-
-This token will need the `Code: Read & write` permission.  Keep this PAT for later use with `setup.sh`
-
 ## Azure resources
 
 The pipeline needs a few Azure resources to execute and aggregate policy results. These are lined out in further detail in [`setup.md`](/../docs/setup.md) folder, and are described in code at [/src/setup](/src/setup). To get started quickly you can use the provided `setup.sh` helper script inside Azure Cloud Shell.
@@ -69,9 +61,9 @@ git clone https://github.com/Microsoft/cloud-custodian-pipeline-sample.git
 cd cloud-custodian-pipeline-sample/src/setup
 
 # Run one-time setup in your Azure Subscription
-# Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP PAT SENDGRID_PASS LOCATION
+# Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP SENDGRID_PASS LOCATION
 # Example usage, substitute with your own values
-./setup.sh cloud-custodian-rg 00000000-0000-0000-0000-000000000000 vwferscof5rcoxfmxltowonqmrntspv5jqtvqwwjsndf7qwi2xxa supersecretpassword westus2
+./setup.sh cloud-custodian-rg 00000000-0000-0000-0000-000000000000 supersecretpassword westus2
 ```
 
 ## Custodian Mailer

@@ -2,7 +2,7 @@ import sys
 import os
 import getopt
 from vsts.vss_connection import VssConnection
-from msrest.authentication import BasicAuthentication
+from msrest.authentication import BasicTokenAuthentication
 from vsts.git.v4_1.models import Comment
 from vsts.git.v4_1.models.git_pull_request_comment_thread import GitPullRequestCommentThread
 
@@ -43,7 +43,10 @@ class PostToPr:
             sys.exit()
 
         # Create a connection to the org
-        credentials = BasicAuthentication('', token)
+        token = {
+            'access_token': access_token
+        }
+        credentials = BasicTokenAuthentication(token)
         connection = VssConnection(base_url=organization_uri, creds=credentials)
 
         # Get a git client
