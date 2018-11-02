@@ -9,7 +9,7 @@ policies:
         servicePlan:
           name: custodiansamplepipeline
       execution-options:
-          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodian
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodianlogs/{account_id}/{policy_name}/{now:%Y/%m/%d/%H/}
     filters:
       - type: empty-group
     actions:
