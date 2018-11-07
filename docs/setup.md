@@ -47,6 +47,7 @@ The pipeline needs a few Azure resources to execute and aggregate policy results
 This script will create
 
 * Service Principal for PR Builds
+* Service Principal for Release pipeline to deploy policies
 * Service Principal for Cloud Custodian policy execution
 * Key Vault to store secrets
 * Storage account for Custodian logs
@@ -109,15 +110,18 @@ Deploying Cloud Custodian to Azure Functions requires a Linux environment. You w
 
 Install and configure Cloud Custodian mailer on your machine by following [these installation instructions](https://github.com/capitalone/cloud-custodian/blob/master/tools/c7n_mailer/README.md#developer-install-os-x-el-capitan).
 
-Cloud Custodian Mailer requires a `Service Principal` to access the storage queue. We will use the `CustodianReleaseServicePrincipal` Service Principal that was created when you ran [setup.sh](../src/setup/setup.sh). Ensure you have set the following environment variables before deploying the mailer. More details on Authentication can be [read here](http://capitalone.github.io/cloud-custodian/docs/azure/authentication.html).
+Cloud Custodian Mailer requires a `Service Principal` to access the storage queue. We will use the `CustodianReleaseServicePrinical` Service Principal to deploy the mailer as an Azure Function and the `CustodianFunctionServicePrincipal` Service Principal to run the mailer. Each of these Service Prinicpals were created when you ran [setup.sh](../src/setup/setup.sh). Ensure you have set the following environment variables before deploying the mailer. More details on Authentication can be [read here](http://capitalone.github.io/cloud-custodian/docs/azure/authentication.html). Also, ensure that `CustodianFunctionServicePrincipal` has the `Storage Queue Data Contributor` role assigned to the storage queue where messages will be pulled from.
 
 ```
-export AZURE_TENANT_ID=<tenant_id>
-export AZURE_SUBSCRIPTION_ID=<subscription_id>
-export AZURE_CLIENT_ID=<service_principal_app_id>
-export AZURE_CLIENT_SECRET=<service_principal_secret>
+export AZURE_TENANT_ID=<release_sp_tenant_id>
+export AZURE_SUBSCRIPTION_ID=<subscription_id_to_deploy_mailer_to>
+export AZURE_CLIENT_ID=<release_sp_app_id>
+export AZURE_CLIENT_SECRET=<release_sp_secret>
+export AZURE_FUNCTION_TENANT_ID=<function_sp_tenant_id>
+export AZURE_FUNCTION_SUBSCRIPTION_ID=<subscription_id_to_deploy_mailer_to>
+export AZURE_FUNCTION_CLIENT_ID=<function_sp_app_id>
+export AZURE_FUNCTION_CLIENT_SECRET=<function_sp_secret>
 ```
-
 
 Finally, run this command in the root of the repository to deploy the mailer.
 
@@ -135,8 +139,14 @@ You'll need to edit some of the variables in your `azure-pipelines.yml` file, sp
 * `keyVaultName`: the name of the Key Vault that was created by `setup.sh`
 * `repositoryId`: the id of your Azure DevOps Git repository. See [Project Settings] -> [Repositories] -> your repository. Your `repositoryId` will be contained in the URL in your browser
 
-### Subscriptions (`config.json`)
+### Subscription (`config.json`)
 
-To point the pipeline at your own Azure Subscriptions, update `policies/config.json` with your own subscriptionId's.
+To point the pipeline to the Azure Subscription where policies will be deployed, update `subscription` in `policies/config.json` with your own subscription ID.
 
-You can quickly get a list of subscriptions that you have access to by running `az account list -o table`
+You can quickly get a list of subscriptions that you have access to by running `az account list -o table`.
+
+### Subscriptions policies will run against (`config.json`)
+
+For all subscriptions that policies will run against, update `policy-subscriptions` in `policies/config.json` with your own subscription IDs.
+
+You can quickly get a list of subscriptions that you have access to by running `az account list -o table`.

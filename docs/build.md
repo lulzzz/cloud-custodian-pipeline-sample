@@ -50,11 +50,13 @@ The output of this dry run is then posted back to the PR as a comment.
 
 ## Security
 
-The pipeline uses three Service Principals to access Azure:
+The pipeline uses four Service Principals to access Azure:
 
-* **CustodianBuildServicePrincipal**: used when a new pull request is submitted, to run Cloud Custodian policies in `--dry-run` mode, so that policy authors can see what resources will be affected by a change. This SP should be granted a limited role like `Reader`. These credentials are stored securely in Key Vault.
+* **CustodianBuildServicePrincipal**: used when a new pull request is submitted, to run Cloud Custodian policies in `--dry-run` mode, so that policy authors can see what resources will be affected by a change. This SP should be granted a limited role like `Reader` on all subscriptions where policies will run against. These credentials are stored securely in Key Vault.
 
-* **CustodianReleaseServicePrincipal**: used at runtime by Cloud Custodian to access Azure API's. This SP needs access to execute policies across your targeted subscriptions. If your policies modify resources, such as by adding tags or stopping VMs, this SP will need a role like `Contributor`. These credentials are stored securely in Key Vault.
+* **CustodianReleaseServicePrincipal**: used at release time to deploy policies to an Azure Subscription. This SP needs access to the subscription where policies will be deployed to and will need the role like `Contributor`. These credentials are stored securely in Key Vault.
+
+* **CustodianFunctionServicePrincipal**: used at runtime by Cloud Custodian to access Azure API's. This SP needs access to execute policies across your targeted subscriptions. If your policies modify resources, such as by adding tags or stopping VMs, this SP will need a role like `Contributor`. If your policies only find and report on resources, this SP will need a role like `Reader`. This SP will also need the `Storage Blob Data Contributor` and `Storage Queue Data Contributor` roles on the storage account where policies logs are written to and notification messages are queued. These credentials are stored securely in Key Vault.
 
 * **Azure DevOps Service Connection**: used by Azure Pipelines to retrieve the other credentials from Key Vault and inject them as part of Build and Release. These credentials are automatically generated and managed by Azure DevOps.
 

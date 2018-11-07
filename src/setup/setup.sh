@@ -49,26 +49,36 @@ EOF
 
   # Create Service Principals
   # - build: used to dry run PR's
-  # - release: used to execute policies inside Azure Functions
+  # - release: used to deploy policies as Azure Functions
+  # - function: used to execute policies inside Azure Functions
   echo -e "Creating Service Principals\n"
   create_sp CustodianBuildServicePrincipal $VAULT
   create_sp CustodianReleaseServicePrincipal $VAULT
-  echo -e  "\nYou will need to assign the appropriate permissions to allow Service Principals to have access to your subscription(s)."
-  echo "You can do this via the portal or by using the CLI."
-  echo "Ex: 'az role assignment create --role Reader --assignee 00000000-0000-0000-0000-000000000000'"
+  create_sp CustodianFunctionServicePrincipal $VAULT
+  log  "You will need to assign the appropriate permissions to allow Service Principals to have access to your subscription(s)."
+  log "CustodianBuildServicePrincipal should have the 'Reader' role assigned to the subscription(s) where dry-run policies are ran against"
+  log "CustodianReleaseServicePrincipal should have the 'Contributor' role assigned to the subscription(s) where policies are deployed to"
+  log "CustodianFunctionServicePrincipal should have the 'Reader' role assigned to the subscription(s) where policies are ran against"
+  log "CustodianFunctionServicePrincipal should have the 'Storage Blob Data Contributor' role assigned to the '$STORAGE_ACCT' storage account where policies will write logs to"
+  log "CustodianFunctionServicePrincipal should have the 'Storage Queue Data Contributor' role assigned to the '$STORAGE_ACCT' storage account where policies with notifications will queue messages"
+  log "If you plan to run policies with actions, CustodianFunctionServicePrincipal should have the 'Contributor' role or role(s) with enough permissions assigned to the subscription(s) where policies are ran against"
+  log "You can do this via the portal or by using the CLI."
+  log "Ex: 'az role assignment create --role Reader --assignee 00000000-0000-0000-0000-000000000000'"
 }
 
 # Create a Service Principal, format it for the CI/CD pipeline, and place it into Key Vault
 create_sp(){
   # Generate a random suffix to avoid name collisions within the same AAD tenant
-  local SP_NAME="$1-$RANDOM"
-  local SP=$(az ad sp create-for-rbac -n $SP_NAME --skip-assignment -o json)
+  local SP_NAME="$1"
+  local SP_NAME_RANDOM="$SP_NAME-$RANDOM"
+  local KEY_VAULT="$2"
+  local SP=$(az ad sp create-for-rbac -n $SP_NAME_RANDOM --skip-assignment -o json)
   local SPID=$(echo $SP | jq -r .appId)
   local SECRET=$(echo $SP \
     | jq '{tenantId:.tenant,appId:.appId,clientSecret:.password}' \
     | base64)
 
-  az keyvault secret set --vault-name $2 -n $1 -e base64 --description "Service Principal for Cloud Custodian" --value "$SECRET" > /dev/null
+  az keyvault secret set --vault-name $KEY_VAULT -n $SP_NAME -e base64 --description "Service Principal for Cloud Custodian" --value "$SECRET" > /dev/null
 
   log "Created Service Principal: $SP_NAME ($SPID)"
 }

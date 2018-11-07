@@ -1,0 +1,18 @@
+policies:
+  - name: find-cosmosdb-inactive
+    resource: azure.cosmosdb
+    mode:
+      type: azure-periodic
+      schedule: '0 0 * * * *'
+      provision-options:
+        servicePlan:
+          name: custodiansamplepipeline
+      execution-options:
+          output_dir: azure://custodiansamplepipeline.blob.core.windows.net/custodianlogs/{account_id}/{policy_name}/{now:%Y/%m/%d/%H/}
+    filters:
+      - type: metric
+        metric: TotalRequests
+        op: le
+        aggregation: total
+        threshold: 1000
+        timeframe: 72

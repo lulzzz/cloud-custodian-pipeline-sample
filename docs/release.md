@@ -19,7 +19,7 @@
     **Note**: Because this reference uses the same build pipeline for CI and PR validation, not setting master as the target branch will cause the release to deploy PR builds.
 
     ![Add Continuous Deployment](../docs/images/continuous-deployment.png)
-    
+
 4. Add the following release variables, which the release tasks will reference. This will contain information such as file paths, Key Vault names, service connection names, and other information we will consume during the release. Use the same `service connection name` previously setup during the build.
 
     ```
@@ -28,7 +28,7 @@
     outputPath : azure://<storage_account>.blob.core.windows.net/custodianlogs
     policyFilePath : ./artifacts/package/policies/policies.release.json
     policyRunnerFile : ./artifacts/package/policy_runner.py
-    secretsFilter : CustodianReleaseServicePrincipal
+    secretsFilter : CustodianReleaseServicePrincipal,CustodianFunctionServicePrincipal
     serviceConnectionAzureSubscription : <service connection name>
     ```
 
@@ -72,7 +72,7 @@
 
     ```
     Script path: $(policyRunnerFile)
-    Arguments: -c $(configFilePath) -p $(policyFilePath) -s $(CustodianReleaseServicePrincipal) -o $(outputPath)
+    Arguments: -c $(configFilePath) -p $(policyFilePath) -s $(CustodianReleaseServicePrincipal) -f $(CustodianFunctionServicePrincipal) -o $(outputPath)
     ```
 
     ![Deploy Policies](../docs/images/deploy-policies.png)

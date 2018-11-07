@@ -67,8 +67,15 @@ steps:
         ;;
       *)
         LAST_RELEASED_COMMIT_ID=$(./src/build/scripts/getLastReleasedCommit.sh "$(System.TeamFoundationCollectionUri)" "$(System.TeamProject)" "$(System.TeamProjectId)" $(System.DefinitionId) $(System.AccessToken))
-        echo "Getting modified policies since the last released commit id $LAST_RELEASED_COMMIT_ID"
-        c7n-policystream diff -r . --source $LAST_RELEASED_COMMIT_ID -o $(policiesFilePath)
+        if [ -z "$LAST_RELEASED_COMMIT_ID" ]
+        then
+          echo "Couldn't get the last released commit id. Getting all custodian policies"
+          python src/build/scripts/get_all_policies.py -r . -o $(policiesFilePath)
+        else
+          echo "Getting modified policies since the last released commit id $LAST_RELEASED_COMMIT_ID"
+          c7n-policystream diff -r . --source $LAST_RELEASED_COMMIT_ID -o $(policiesFilePath)
+        fi
+
       esac
       echo "Modified policies:"
       cat $(policiesFilePath)
@@ -102,7 +109,8 @@ steps:
     inputs:
       scriptSource: 'filePath'
       scriptPath: "src/build/scripts/policy_runner.py"
-      arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianBuildServicePrincipal) -o $(outputPath) --dryrun'
+      arguments: '-c $(configFilePath) -p $(policyFilePath) -s $(CustodianBuildServicePrincipal) -f $(CustodianBuildServicePrincipal) -o $(outputPath) --dryrun'
+      failOnStderr: true
 
   # Post the output of the dry run to the PR
   - task: PythonScript@0
