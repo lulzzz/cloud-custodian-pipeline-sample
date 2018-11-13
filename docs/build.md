@@ -1,14 +1,26 @@
 # Build design
 
+The build pipeline is setup to run on an Ubuntu Linux build agent and triggered to run each time a change is committed to the `master` branch. Typically, this is done when merging pull requests. All build variables are defined at the top of the pipeline under the `variables` group.
+
 ## Build Tasks
 
+### Using Python version 3.6
+
+Currently, Cloud Custodian is built and validated against Python 3.6.
+
+### Download Azure Key Vault Secrets
+
+For each build, secrets are downloaded securely from Azure Key Vault, stored in memory and only accessible to the current build.
+
 ### Installing Cloud Custodian
-Typically Cloud Custodian for Azure is installed by installing the [`c7n`](https://pypi.org/project/c7n/) and [`c7n_azure`](https://pypi.org/project/c7n_azure/) PyPI packages. Instead of installing the packages, the build task is installing from a branch with workarounds to make unique storage accounts. There are several required changes that need to be in the PyPI packages for this pipeline to work as intended. When those changes are in the latests PyPI packages it is recommended to install those packages and not a specific Github branch.
+
+Typically Cloud Custodian for Azure is installed by installing the [`c7n`](https://pypi.org/project/c7n/) and [`c7n_azure`](https://pypi.org/project/c7n_azure/) PyPI packages. Instead of installing the packages, the build task is installing from the master branch of the Cloud Custodian repository pinned to a specific commit id. There are several required changes that need to be in the PyPI packages for this pipeline to work as intended. When those changes are in the latests PyPI packages it is recommended to install those packages and not a specific Github branch.
 
 Installing Cloud Custodian is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
 ### Installing Cloud Custodian's PolicyStream Tool
-The Cloud Custodian policystream python tool is fetched from [https://pypi.org/project/c7n-policystream/](https://pypi.org/project/c7n-policystream/)
+
+The Cloud Custodian policystream python tool is fetched from [https://pypi.org/project/c7n-policystream/](https://pypi.org/project/c7n-policystream/). This tool is used in later build steps.
 
 The prerequisities for using the tool requires pygit2. The package of pygit2 requires libgit2, installing these on Ubuntu requires the steps in
 this [document](https://www.pygit2.org/install.html#quick-install).
@@ -16,6 +28,7 @@ this [document](https://www.pygit2.org/install.html#quick-install).
 Installing the c7n-policystream python tool and its prerequisites are triggered as Pipeline Build tasks in [azure-pipelines.yml](azure-pipelines.yml)
 
 ### Get Modifications to Custodian Policies (`validatePolicyChangesOnly: true`)
+
 The default CI behavior is to run checks only on modified policies. All modified Cloud Custodian policies are discovered by running the c7n-policystream python tool installed from Cloud Custodian. The command checks the difference between the master branch of a repository and the source branch. The tool outputs to a policies.yml file that contains all the new or modified policies in one yml file.
 
 Getting Custodian policy modifications is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
@@ -25,16 +38,19 @@ Getting Custodian policy modifications is triggered as a Pipeline Build task in 
 > Note: Policies must currently be placed at the root of the repository until [cloud-custodian/pull/2977](https://github.com/capitalone/cloud-custodian/pull/2977) is merged
 
 ### Get All Custodian Policies (`validatePolicyChangesOnly: false`)
+
 The build can optionally validate all policies in the repository. This is useful when making changes to the CI/CD pipeline itself and policies are not being touched. To run in this mode, queue a manual build and set `validatePolicyChangesOnly: false`.
 
 > This task is skipped by default, when validating only modified policies.
 
 ### Cloud Custodian Policy Validation
+
 Cloud Custodian policies are linted and validated using the `custodian validate` command.
 
 Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
 ### Policy Mode Validation
+
 All Cloud Custodian policies should be in policy mode (type: azure-periodic).
 
 Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
@@ -42,6 +58,7 @@ Policy validation is triggered as a Pipeline Build task in [azure-pipelines.yml]
 Policy validation is executed in [validate_policy_mode.py](src/build/scripts/validate_policy_mode.py)
 
 ### Cloud Custodian Dry run
+
 After policy validation the pipeline executes a dry run of the policies.
 
 The dry run will execute against the given subscription(s) but without taking action.  This shows what Cloud Custodian will execute in production.
@@ -61,7 +78,7 @@ The pipeline uses four Service Principals to access Azure:
 * **Azure DevOps Service Connection**: used by Azure Pipelines to retrieve the other credentials from Key Vault and inject them as part of Build and Release. These credentials are automatically generated and managed by Azure DevOps.
 
 > **Note**: Service Principal credentials stored in Key Vault are base64 encoded JSON in the following format:
-> ```
+> ```json
 > {
 >    "tenantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
 >    "appId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",

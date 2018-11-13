@@ -28,6 +28,18 @@ Next, you'll create a [YAML-based build](https://docs.microsoft.com/en-us/azure/
 
 Next, you'll need to configure Azure DevOps so that it can connect to your Azure Subscription. Go to [Project Settings] -> [Pipelines] -> [Service connections] and add a new service connection for Azure Resource Manager.
 
+### Setup pull request build validations
+
+To catch errors early, it is recommended to run build validations for each pull request. A pull request cannot be merged until a successful build. We will use the same [azure-pipelines.yml](../azure-pipelines.yml) build definition for pull request builds.
+
+1. Navigate to `Repos` -> `Branches`, hover over the `master` branch, click `More Actions` -> `Branch Policies`.
+
+![Branches - More Actions](../docs/images/pr-build-branches.png)
+
+2. Scroll down to `Build Validation`, click `Add build policy` and select the build pipeline created previously. Leave the remaining settings as the default values and click `Save`.
+
+![Add Branch Policy](../docs/images/pr-build-policy.png)
+
 ### Create a Release
 
 ### Create a Service Connection
