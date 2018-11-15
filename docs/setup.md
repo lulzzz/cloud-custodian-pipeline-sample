@@ -54,7 +54,7 @@ You'll need the Azure Active Directory appId for the Service Principal that was 
 
 ## Azure resources
 
-The pipeline needs a few Azure resources to execute and aggregate policy results. These are lined out in further detail in [`setup.md`](/../docs/setup.md) folder, and are described in code at [/src/setup](/src/setup). To get started quickly you can use the provided `setup.sh` helper script inside Azure Cloud Shell.
+The pipeline needs a few Azure resources to execute and aggregate policy results. These are lined out below and are described in code at [/src/setup](/src/setup). To get started quickly you can use the provided `setup.sh` helper script inside Azure Cloud Shell.
 
 This script will create
 
@@ -63,8 +63,11 @@ This script will create
 * Service Principal for Cloud Custodian policy execution
 * Key Vault to store secrets
 * Storage account for Custodian logs
+* Azure Function to convert logs from `.json.gz` to Azure Table Storage
 * Storage account queue for Custodian policies to push notifications to
 * [SendGrid Email Service](https://docs.microsoft.com/en-us/azure/sendgrid-dotnet-how-to-send-email) for sending Custodian email notifications
+
+> Note: You will need to accept the SendGrid license terms. You can review the SendGrid license text by clicking [this link](https://storelegalterms.blob.core.windows.net/legalterms/3E5ED_legalterms_SENDGRID%253a24SENDGRID%253a5FAZURE%253a24FREE%253a24YETL367I3WKHD54DOKWY3WW3VV6IKDF32UCLUQA6JEV4GAZY2JLEYCDJI64NPQ2OLUJMS5R2JHZOXC663I73AX45FCBR5CFAYEKUO2Y.txt)
 
 There are a few lines of output that you'll use in later steps when configuring your pipeline. They'll be written to STDOUT and saved to `setup.log`
 
@@ -72,6 +75,9 @@ There are a few lines of output that you'll use in later steps when configuring 
 # Clone the sample pipeline
 git clone https://github.com/Microsoft/cloud-custodian-pipeline-sample.git
 cd cloud-custodian-pipeline-sample/src/setup
+
+# Accept the SendGrid free SKU license terms (note: the values are case-sensitive)
+az vm image accept-terms --publisher Sendgrid --offer sendgrid_azure --plan free
 
 # Run one-time setup in your Azure Subscription
 # Usage: ./setup.sh CUSTODIAN_RG PIPELINE_SP SENDGRID_PASS LOCATION

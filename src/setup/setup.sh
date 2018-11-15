@@ -34,12 +34,22 @@ EOF
   az group create -n $CUSTODIAN_RG -l $LOCATION > /dev/null
   DEPLOYMENT=$(az group deployment create -g $CUSTODIAN_RG --template-file templates/azuredeploy.json --parameters pipelineServicePrincipalObjectId=$PIPELINE_SP_OID sendGridPassword=$SENDGRID_PASS -o json)
   STORAGE_ACCT=$(echo $DEPLOYMENT | jq -r .properties.outputs.storageAccountName.value)
+  STORAGE_ACCT_ID=$(echo $DEPLOYMENT | jq -r .properties.outputs.storageAccountResourceId.value)
   VAULT=$(echo $DEPLOYMENT | jq -r .properties.outputs.keyVaultName.value)
+  FUNCTION=$(echo $DEPLOYMENT | jq -r .properties.outputs.functionName.value)
+  FUNCTION_ID=$(echo $DEPLOYMENT | jq -r .properties.outputs.functionResourceId.value)
   az storage queue create --name $MAILQUEUE_NAME --account-name $STORAGE_ACCT > /dev/null
 
   log "Storage account for Cloud Custodian logs created: $STORAGE_ACCT"
   log "Key Vault for pipelines created: $VAULT"
   log "Storage queue for Cloud Custodian mailer created: https://$STORAGE_ACCT.queue.core.windows.net/$MAILQUEUE_NAME"
+  
+  # Deploy an Azure Function to convert gzip'd Cloud Custodian output to Azure Table storage
+  az functionapp deployment source config -g $CUSTODIAN_RG -n $FUNCTION -u https://github.com/Microsoft/cloud-custodian-pipeline-sample.git --manual-integration > /dev/null
+  ARM_TOKEN=$(az account get-access-token --query accessToken -o tsv)
+  SYSTEM_KEY=$(curl -s -H "Authorization: Bearer $ARM_TOKEN" "https://management.azure.com$FUNCTION_ID/hostruntime/admin/host/systemkeys/eventgrid_extension?api-version=2018-02-01" | jq -r .value)
+  az eventgrid event-subscription create --resource-id $STORAGE_ACCT_ID --name custodianlogs --included-event-types 'Microsoft.Storage.BlobCreated' --subject-ends-with 'resources.json.gz' --endpoint "https://$FUNCTION.azurewebsites.net/runtime/webhooks/eventgrid?functionName=TransformCustodianLogs&code=$SYSTEM_KEY"
+  log "Azure Function for data processing created: $FUNCTION"
 
   # Add permissions to allow setting Key Vault secrets
   az keyvault set-policy -n $VAULT --upn $(az account show --query 'user.name' -o tsv) --secret-permissions get list set delete backup restore recover > /dev/null

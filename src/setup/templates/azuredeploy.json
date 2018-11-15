@@ -88,10 +88,18 @@
       "metadata": {
         "description": "Contact company website used by SendGrid for support agents / technical contacts"
       }
+    },
+    "functionName": {
+      "type": "string",
+      "defaultValue": "[concat('custodian', take(uniqueString(resourceGroup().id), 6))]",
+      "metadata": {
+        "description": "The name of the Azure Function to process Cloud Custodian output"
+      }
     }
   },
   "variables": {
-    "tenantId": "[subscription().tenantId]"
+    "tenantId": "[subscription().tenantId]",
+    "insightsName": "[parameters('functionName')]"
   },
   "resources": [
     {
@@ -159,6 +167,70 @@
         "company": "[parameters('sendGridContactCompanyName')]",
         "website": "[parameters('sendGridContactWebsite')]"
       }
+    },
+    {
+      "name": "[variables('insightsName')]",
+      "apiVersion": "2015-05-01",
+      "type": "Microsoft.Insights/components",
+      "location": "West US 2",
+      "tags": {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('functionName'))]": "Resource"
+      },
+      "properties": {
+        "ApplicationId": "[parameters('functionName')]"
+      }
+    },
+    {
+      "name": "[parameters('functionName')]",
+      "apiVersion": "2016-03-01",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Web/sites",
+      "kind": "functionapp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('custodianLogStorageAccountName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('insightsName'))]"
+      ],
+      "properties": {
+        "name": "[parameters('functionName')]",
+        "reserved": false,
+        "clientAffinityEnabled": false,
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('custodianLogStorageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('custodianLogStorageAccountName')), '2018-02-01').keys[0].value)]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~2"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('custodianLogStorageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('custodianLogStorageAccountName')), '2018-02-01').keys[0].value)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[toLower(parameters('functionName'))]"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "8.11.1"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components/', variables('insightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "CustodianLogsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('custodianLogStorageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('custodianLogStorageAccountName')), '2018-02-01').keys[0].value)]"
+            }
+          ]
+        }
+      }
     }
   ],
   "outputs": {
@@ -166,9 +238,21 @@
       "type": "string",
       "value": "[parameters('custodianLogStorageAccountName')]"
     },
+    "storageAccountResourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('custodianLogStorageAccountName'))]"
+    },
     "keyVaultName": {
       "type": "string",
       "value": "[parameters('keyVaultName')]"
+    },
+    "functionName": {
+      "type": "string",
+      "value": "[parameters('functionName')]"
+    },
+    "functionResourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Web/sites', parameters('functionName'))]"
     }
   }
 }
