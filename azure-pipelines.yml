@@ -13,7 +13,8 @@ variables:
   policyFilePath: policies/policies.build.json # replace with path to policy file if not default
   outputPath: output # replace with path for Custodian policy run output
   repositoryId: idOfTheRepository # replace with the id of the repository, see Project Settings -> Repositories -> Select repo and look at URL
-  cloudCustodianCommit: fc5b51019e9c15d0582089133d080bceee489a94 # Cloud Custodian commit to use
+  cloudCustodianPipVersion: '0.8.32.0'  # Cloud Custodian pypi version to use
+  cloudCustodianAzurePipVersion: '0.3'  # Cloud Custodian Azure pypi version to use
   validatePolicyChangesOnly: True
 
 # Build tasks
@@ -46,12 +47,12 @@ steps:
   # Install Cloud Custodian and c7n_azure
   - script: mkdir -p $AGENT_BUILDDIRECTORY/temp &&
       cd $AGENT_BUILDDIRECTORY/temp &&
-      git clone https://github.com/capitalone/cloud-custodian -n &&
-      cd cloud-custodian &&
-      git checkout $(cloudCustodianCommit) &&
-      cd .. &&
-      pip install ./cloud-custodian &&
-      pip install ./cloud-custodian/tools/c7n_azure
+      pip download --no-deps c7n==$(cloudCustodianPipVersion) &&
+      pip download --no-deps c7n_azure==$(cloudCustodianAzurePipVersion) &&
+      mv c7n-$(cloudCustodianPipVersion).tar.gz c7n.tar.gz &&
+      mv c7n_azure-$(cloudCustodianAzurePipVersion).tar.gz c7n_azure.tar.gz &&
+      pip install ./c7n.tar.gz &&
+      pip install ./c7n_azure.tar.gz
     displayName: 'Install Cloud Custodian'
 
   # Get c7n-policystream python package
@@ -120,19 +121,10 @@ steps:
       scriptPath: 'src/build/scripts/post_to_pr.py'
       arguments: '-o "$(System.TeamFoundationCollectionUri)" -p "$(System.TeamProject)" -r "$(repositoryId)" -i "$(System.PullRequest.PullRequestId)" -t "$(System.AccessToken)" -d "$(outputPath)" --enable-vso-output'
 
-  # Package c7n python package artifact
+  # Copy c7n and c7n_azure python package artifacts
   - script: mkdir -p $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist &&
-      cd $AGENT_BUILDDIRECTORY/temp/cloud-custodian &&
-      python setup.py sdist &&
-      mv ./dist/c7n-*.tar.gz $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist/c7n.tar.gz
-    displayName: 'Package c7n python package artifact'
-
-  # Package c7n-azure python package artifact
-  - script: mkdir -p $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist &&
-      cd $AGENT_BUILDDIRECTORY/temp/cloud-custodian/tools/c7n_azure &&
-      python setup.py sdist &&
-      mv ./dist/c7n_azure*.tar.gz $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist/c7n_azure.tar.gz
-    displayName: 'Package c7n-azure python package artifact'
+      cp $AGENT_BUILDDIRECTORY/temp/c7n*.tar.gz $BUILD_ARTIFACTSTAGINGDIRECTORY/c7n-dist/
+    displayName: 'Copy c7n and c7n_azure python package artifacts'
 
   # Copy Cloud Custodian dryrun output files
   - task: CopyFiles@2
