@@ -14,7 +14,7 @@ For each build, secrets are downloaded securely from Azure Key Vault, stored in 
 
 ### Installing Cloud Custodian
 
-Typically Cloud Custodian for Azure is installed by installing the [`c7n`](https://pypi.org/project/c7n/) and [`c7n_azure`](https://pypi.org/project/c7n_azure/) PyPI packages. Instead of installing the packages, the build task is installing from the master branch of the Cloud Custodian repository pinned to a specific commit id. There are several required changes that need to be in the PyPI packages for this pipeline to work as intended. When those changes are in the latests PyPI packages it is recommended to install those packages and not a specific Github branch.
+Cloud Custodian for Azure is installed by installing the [`c7n`](https://pypi.org/project/c7n/) and [`c7n_azure`](https://pypi.org/project/c7n_azure/) PyPI packages.
 
 Installing Cloud Custodian is triggered as a Pipeline Build task in [azure-pipelines.yml](azure-pipelines.yml)
 
