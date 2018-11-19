@@ -1,4 +1,4 @@
-# cloud-custodian-pipeline-sample
+# Cloud Custodian Azure DevOps Pipelines Sample
 
 This is a sample implementation of an end to end [Cloud Custodian](https://github.com/capitalone/cloud-custodian) deployment on Azure
 
