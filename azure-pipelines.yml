@@ -63,23 +63,31 @@ steps:
   - script: |
       case $(Build.Reason) in
       "PullRequest"*)
-        echo "Getting modified policies for pull request"
-        c7n-policystream diff -r . --source origin/master --target HEAD -o $(policiesFilePath)
+        if [ "$(git diff origin/master --name-only | grep -c "policies/config.json")" -gt 0 ];
+        then
+          echo "Detected change in 'policies/config.json'. Getting all custodian policies"
+          python src/build/scripts/get_all_policies.py -r . -o $(policiesFilePath)
+        else
+          echo "Getting modified policies for pull request"
+          c7n-policystream diff -r . --source origin/master --target HEAD -o $(policiesFilePath)
+        fi
         ;;
       *)
         LAST_RELEASED_COMMIT_ID=$(./src/build/scripts/getLastReleasedCommit.sh "$(System.TeamFoundationCollectionUri)" "$(System.TeamProject)" "$(System.TeamProjectId)" $(System.DefinitionId) $(System.AccessToken))
+
         if [ -z "$LAST_RELEASED_COMMIT_ID" ]
         then
           echo "Couldn't get the last released commit id. Getting all custodian policies"
+          python src/build/scripts/get_all_policies.py -r . -o $(policiesFilePath)
+        elif [ "$(git diff $LAST_RELEASED_COMMIT_ID --name-only  | grep -c "policies/config.json")" -gt 0 ];
+        then
+          echo "Detected change in 'policies/config.json'. Getting all custodian policies"
           python src/build/scripts/get_all_policies.py -r . -o $(policiesFilePath)
         else
           echo "Getting modified policies since the last released commit id $LAST_RELEASED_COMMIT_ID"
           c7n-policystream diff -r . --source $LAST_RELEASED_COMMIT_ID -o $(policiesFilePath)
         fi
-
       esac
-      echo "Modified policies:"
-      cat $(policiesFilePath)
     displayName: 'Get all custodian policies that have been modified'
     condition: and(succeeded(), eq(variables['validatePolicyChangesOnly'], True))
 
